@@ -1,0 +1,16 @@
+# test load
+
+#g = LOAD "data/human.hg18.genome" AS GENOME;
+
+a = LOAD "data/knownGene.hg18.chr21.bed" AS BED12;
+b = LOAD "data/rmsk.hg18.chr21.bed" AS BED6;
+c = LOAD "data/gencode.genes.hg18.bed" AS BED12;
+
+# test intersect
+d = INTERSECT a,b,c;
+
+e = SUBTRACT a,b,c;
+
+#PRINT d;
+SAVE d AS "intersect.bed";
+SAVE e AS "subtract.bed";
