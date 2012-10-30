@@ -235,6 +235,22 @@ def subtract_beds(ordered_bed_list):
 	return bed_queue.popleft()
 #}}}
 
+#{{{ def merge_min(bednfile):
+def merge_min(bednfile):
+
+	allowed_types = ('BEDN')
+
+	if not ( bednfile['type'] in allowed_types ):
+		raise Exception('Type mismatch in intersect_beds. ' +
+				bednfile['type'] + ' not supported.')
+	
+	pybedtools.settings.KEEP_TEMPFILES=True
+
+	types = bednfile['types']
+
+	
+#}}}
+
 #{{{ def print_file(ident):
 def print_file(ident):
 	f = open(ident['val'], 'r')

@@ -89,6 +89,12 @@ def p_exp_intersect(p):
 	#print "p_exp_intersect"
 	p[0] = ("intersect",  p[2] )
 
+def p_exp_intersect(p):
+	'exp : MERGE MIN ident'
+	#print "p_exp_intersect"
+	p[0] = ("merge-min",  p[3] )
+
+
 def p_exp_subtract(p):
 	'exp : SUBTRACT idents'
 	#print "p_exp_intersect"

@@ -113,7 +113,7 @@ def eval_exp(exp, env):
 				'tmp':True}
 	#}}}
 
-	#{{{ elif etype == 'intersect':
+	#{{{ elif etype == 'subtract':
 	elif etype == 'subtract':
 		# ('subtract',
 		#	[('identifier', 'a'), ('identifier', 'b')])
@@ -128,6 +128,19 @@ def eval_exp(exp, env):
 		return {'val':result_file['val'],
 				'type':result_file['type'],
 				'tmp':True}
+	#}}}
+
+	#{{{ elif etype == 'merge-min':
+	elif etype == 'merge-min':
+		ident = exp[1]
+		bednfile = eval_exp(ident, env)
+
+		result_file = gqltools.merge_min(bednfile)	
+
+#		return {'val':result_file['val'],
+#				'type':result_file['type'],
+#				'tmp':True}
+
 	#}}}
 
 	elif etype == 'file':

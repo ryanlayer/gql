@@ -9,8 +9,15 @@ c = LOAD "data/gencode.genes.hg18.bed" AS BED12;
 # test intersect
 d = INTERSECT a,b,c;
 
-e = SUBTRACT a,b,c;
+e = MERGE MIN e;				# assumes sccore is zero
+e = MERGE MIN e SCORE(MIN);		# score is MIN of a,b,c
+e = MERGE MIN e SCORE(MAX);		# score is MAX of a,b,c
+e = MERGE MIN e SCORE(MAX a,b); # score is MIN of a,b
+e = MERGE MIN e SCORE(a*2);		# score is a * 2 
+SAVE e AS "merge-min_ab.bed"
+
+#e = SUBTRACT a,b,c;
 
 #PRINT d;
-SAVE d AS "intersect.bed";
-SAVE e AS "subtract.bed";
+#SAVE d AS "intersect.bed";
+#SAVE e AS "subtract.bed";

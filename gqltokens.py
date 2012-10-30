@@ -3,6 +3,8 @@ import ply.lex as lex
 reserved = (
 	'INTERSECT',
 	'SUBTRACT',
+	'MERGE',
+	'MIN',
 	'LOAD',
 	'PRINT',
 	'SAVE',
