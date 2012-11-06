@@ -3,12 +3,23 @@ import ply.lex as lex
 reserved = (
 	'INTERSECT',
 	'SUBTRACT',
+	'MERGEMIN',
 	'MERGE',
-	'MIN',
 	'LOAD',
+	'CAST',
+	'DISTANCE',
 	'PRINT',
 	'SAVE',
+	'COUNT',
 	'AS',
+	'WHERE',
+	'SCORE',
+	'MIN',
+	'MAX',
+	'MEAN',
+	'MEDIAN',
+	'MODE',
+	'STDEV',
 	'GENOME',
 	'BED3',
 	'BED6',
@@ -24,6 +35,8 @@ tokens = (
 		'EQUALEQUAL',	# ==
 		'EQUAL',		# =
 		'COMMA',		# ,
+		'LPAREN',		# (
+		'RPAREN',		# )
 		'SEMICOLON',	# ;
 		'COLON',		# :
 		'STRING',		# "has\"escaped\"quotes"
@@ -48,6 +61,8 @@ t_COLON = r':'
 t_PLUS = r'\+'
 t_MINUS = r'-'
 t_TIMES = r'\*'
+t_LPAREN = r'\('
+t_RPAREN = r'\)'
 
 
 def t_NUMBER(t):

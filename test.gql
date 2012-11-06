@@ -2,22 +2,50 @@
 
 #g = LOAD "data/human.hg18.genome" AS GENOME;
 
-a = LOAD "data/knownGene.hg18.chr21.bed" AS BED12;
-b = LOAD "data/rmsk.hg18.chr21.bed" AS BED6;
-c = LOAD "data/gencode.genes.hg18.bed" AS BED12;
+a = LOAD "data/a.bed" AS BED6;
+b = LOAD "data/b.bed" AS BED6;
+c = LOAD "data/c.bed" AS BED6;
+d = LOAD "data/d.bed";
 
 # test intersect
-d = INTERSECT a,b,c;
+#e = INTERSECT a,b,c,d;
 
-e = MERGE MIN e;				# assumes sccore is zero
-e = MERGE MIN e SCORE(MIN);		# score is MIN of a,b,c
-e = MERGE MIN e SCORE(MAX);		# score is MAX of a,b,c
-e = MERGE MIN e SCORE(MAX a,b); # score is MIN of a,b
-e = MERGE MIN e SCORE(a*2);		# score is a * 2 
-SAVE e AS "merge-min_ab.bed"
+#e = a,b INTERSECT a,b,c,d;
+
+#COUNT e;
+
+#COUNT a;
+
+#f = INTERSECT a,b;
+
+#COUNT f;
+#PRINT f;
+#PRINT e;
+
+#a_bed6 = CAST a AS BED6;
+
+#d = MERGE a_bed6,b;
+#d = MERGE a_bed6,b WHERE SCORE(MIN),DISTANCE(10);
+#d = MERGE a_bed6,b;
+#d = MERGE a_bed6 b;
+
+#PRINT e;
+
+#d = MERGE a,b,c WHERE SCORE(MIN);
+#d = MERGE a,b,c WHERE DISTANCE(10);
+#d = MERGE a,b,c WHERE DISTANCE(10),SCORE(MIN);
+#d = MERGE a,b,c WHERE SCORE(MIN),SCORE(MIN);
+
+
+#e = MERGEMIN d;				# assumes sccore is zero, d is BEDN
+#e = MERGEMIN e SCORE(MIN);		# score is MIN of a,b,c
+#e = MERGEMIN e SCORE(MAX);		# score is MAX of a,b,c
+#e = MERGEMIN e SCORE(MAX a,b); # score is MIN of a,b
+#e = MERGEMIN e SCORE(a*2);		# score is a * 2 
+#SAVE e AS "merge-min_ab.bed"
 
 #e = SUBTRACT a,b,c;
 
 #PRINT d;
 #SAVE d AS "intersect.bed";
-#SAVE e AS "subtract.bed";
+#SAVE e AS "run.bed";

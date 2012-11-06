@@ -8,10 +8,17 @@ import gqltools
 import sys
 
 
+gqllexer    = lex.lex(module=gqltokens)
+gqlparser   = yacc.yacc(module=gqlgrammar,tabmodule="parsetabgql")
+global_env = (None, {})
+
+#if sys.stdin:
+	#for line in sys.stdin:
+		#gqlast = gqlparser.parse(line,lexer=gqllexer,tracking=True)
+		#result = gqlinterp.interpret_cmdline(gqlast, global_env)
+	#gqltools.clear_tmp_files()
+#elif len(sys.argv) == 1:
 if len(sys.argv) == 1:
-	gqllexer    = lex.lex(module=gqltokens)
-	gqlparser   = yacc.yacc(module=gqlgrammar,tabmodule="parsetabgql")
-	global_env = (None, {})
 	while 1:
 		try:
 			data = raw_input('> ')
@@ -25,8 +32,6 @@ else:
 	f = open(sys.argv[1], 'r')
 	data = f.read()
 	f.close()
-	gqllexer    = lex.lex(module=gqltokens)
-	gqlparser   = yacc.yacc(module=gqlgrammar,tabmodule="parsetabgql")
 	gqlast = gqlparser.parse(data,lexer=gqllexer,tracking=True)
 	result = gqlinterp.interpret(gqlast)
 	gqltools.clear_tmp_files()

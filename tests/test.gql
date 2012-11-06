@@ -1,0 +1,7 @@
+a = LOAD "../data/a.bed";
+b = LOAD "../data/b.bed";
+c = LOAD "../data/c.bed";
+d = LOAD "../data/d.bed";
+e = INTERSECT a,b,c,d;
+PRINT e;
+COUNT e;
