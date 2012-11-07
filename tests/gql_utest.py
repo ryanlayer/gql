@@ -97,8 +97,32 @@ class testGQL(unittest.TestCase):
 		self.assertEqual(len(R.val[0]), 2)
 	#}}}
 
-	#{{{ def tearDown():
-	def tearDown():
+	#{{{ def test_binary_intersect(self):
+	def test_merge(self):
+
+		ordered_bed_list = [gqltools.load_file('../data/a.bed','auto'), \
+						gqltools.load_file('../data/b.bed','auto'), \
+						gqltools.load_file('../data/d.bed','auto') ]
+
+		mods = {}
+		R = gqltools.merge_beds(ordered_bed_list, mods)
+
+		self.assertEqual(R.__class__.__name__, 'BED3')
+
+		for func in ['MIN', 'MAX', 'SUM', 'MEAN', 'MEDIAN', 'MODE', \
+				'ANITMODE', 'COLLAPSE']:
+			mods = {'distance':10, 'score':func}
+			R = gqltools.merge_beds(ordered_bed_list, mods)
+			self.assertEqual(R.__class__.__name__, 'BED6')
+
+		#self.assertEqual(len(R.labels[0]), 1)
+		#self.assertEqual(len(R.labels[1]), 2)
+		#self.assertEqual(len(R.val), 1)
+		#self.assertEqual(len(R.val[0]), 2)
+	#}}}
+
+	#{{{ def tearDown(self):
+	def tearDown(self):
 		gqltools.clear_tmp_files()
 	#}}}
 

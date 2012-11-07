@@ -6,10 +6,13 @@ import gqlgrammar
 import gqlinterp
 import gqltools
 import sys
+import tempfile
+import parsetab
+
 
 
 gqllexer    = lex.lex(module=gqltokens)
-gqlparser   = yacc.yacc(module=gqlgrammar,tabmodule="parsetabgql")
+gqlparser   = yacc.yacc(module=gqlgrammar)
 global_env = (None, {})
 
 #if sys.stdin:

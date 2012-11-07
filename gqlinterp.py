@@ -99,7 +99,8 @@ def eval_exp(exp, env):
 		file_path = eval_exp(exp[1], env)
 
 
-		filetype_name = eval_exp(exp[2], env)
+		#filetype_name = eval_exp(exp[2], env)
+		filetype_name = 'auto'
 		
 		# make sure the type is correct
 		return gqltools.load_file(file_path, filetype_name)
@@ -203,16 +204,9 @@ def eval_exp(exp, env):
 		idents = exp[1]
 		modifiers = exp[2]
 		bedfiles = []
-		types = []
 		for ident in idents:
 			bedx = eval_exp(ident, env)
 			bedfiles = bedfiles + [ bedx ]
-			types = types + [ bedx['type'] ]
-
-		score_function_dict = {
-				'MIN':'min', 'MAX':'max', 'SUM':'sum', \
-				'MEAN':'mean', 'MEDIAN':'median', 'MODE':'mode', \
-				'ANITMODE':'antimode', 'COLLAPSE':'collapse'}
 
 		mods = {}
 		for modifier in modifiers:
@@ -224,16 +218,13 @@ def eval_exp(exp, env):
 
 			if modifier_type == 'score':
 				#('score', ('function', 'MIN'))
-				function_type = (modifier[1])[1]
-				if not (function_type in score_function_dict):
-					raise Exception(function_type + \
-							' is not a supported function')
-				mods['score'] = score_function_dict[function_type]
+				function_type = eval_exp(modifier[1], env)
+				mods['score'] = function_type
 
 			elif modifier_type == 'distance':
 				#('distance', ('number', 10.0))
-				number = (modifier[1])[1]
-				mods[modifier_type] = number
+				number = eval_exp(modifier[1], env)
+				mods['distance'] = number
 
 		return gqltools.merge_beds(bedfiles, mods)
 	#}}}
@@ -253,6 +244,9 @@ def eval_exp(exp, env):
 
 	elif etype == 'number':
 		return float(exp[1])
+
+	elif etype == 'function':
+		return exp[1]
 
 	else:
 		print "ERROR: unknown expression type ",

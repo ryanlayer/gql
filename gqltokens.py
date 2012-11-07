@@ -15,9 +15,9 @@ reserved = (
 	'WHERE',
 	'SCORE',
 	'MIN',
+	'SUM',
 	'MAX',
 	'MEAN',
-	'MEDIAN',
 	'MODE',
 	'STDEV',
 	'GENOME',
@@ -28,17 +28,17 @@ reserved = (
 
 tokens = (
 		'NUMBER',		# 10
-		'PLUS',			# +
-		'MINUS',		# -
-		'TIMES',		# *
-		'DIVIDE',		# /
-		'EQUALEQUAL',	# ==
+		#'PLUS',			# +
+		#'MINUS',		# -
+		#'TIMES',		# *
+		#'DIVIDE',		# /
+		#'EQUALEQUAL',	# ==
 		'EQUAL',		# =
 		'COMMA',		# ,
 		'LPAREN',		# (
 		'RPAREN',		# )
 		'SEMICOLON',	# ;
-		'COLON',		# :
+		#'COLON',		# :
 		'STRING',		# "has\"escaped\"quotes"
 		'IDENTIFIER',	# INTERSECT LOAD ...
 ) + reserved
@@ -53,14 +53,14 @@ def t_newline(t):
 
 
 t_COMMA = r','
-t_DIVIDE = r'/'
-t_EQUALEQUAL = r'=='
+#t_DIVIDE = r'/'
+#t_EQUALEQUAL = r'=='
 t_EQUAL = r'='
 t_SEMICOLON = r';'
-t_COLON = r':'
-t_PLUS = r'\+'
-t_MINUS = r'-'
-t_TIMES = r'\*'
+#t_COLON = r':'
+#t_PLUS = r'\+'
+#t_MINUS = r'-'
+#t_TIMES = r'\*'
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 

@@ -3,16 +3,15 @@ from gqltokens import tokens
 
 start = "gql"
 
-precedence = (
-		('left', 'EQUALEQUAL'),
-		('left', 'PLUS', 'MINUS'),
-		('left', 'TIMES', 'DIVIDE'),
-)
+#precedence = (
+		#('left', 'EQUALEQUAL'),
+		#('left', 'PLUS', 'MINUS'),
+		#('left', 'TIMES', 'DIVIDE'),
+#)
 
 
 def p_gql(p):
 	'gql : element gql'
-	#print "p_gql"
 	p[0] = [ p[1] ] + p[2]
 
 def p_gql_empty(p):
@@ -21,7 +20,6 @@ def p_gql_empty(p):
 
 def p_element_stmt(p):
 	'element : sstmt'
-	#print "p_element_stmt"
 	p[0] = ("stmt",p.lineno(1),p[1])
 
 #def p_stmts(p):
@@ -35,7 +33,6 @@ def p_element_stmt(p):
 
 def p_sstmt_assignment(p):
 	'sstmt : IDENTIFIER EQUAL exp SEMICOLON'
-	#print "p_sstmt_assignment"
 	p[0] = ("assign",p[1],p[3])
 
 def p_sstmt_count(p):
@@ -52,7 +49,6 @@ def p_sstmt_save(p):
 
 def p_sstmt_exp(p):
 	'sstmt : exp SEMICOLON'
-	#print "p_sstmt_exp"
 	p[0] = ("exp",p[1])
 
 def p_exp_identifier(p):
@@ -98,6 +94,10 @@ def p_filetypes(p):
 def p_exp_load(p):
 	'exp : LOAD file optfiletype'
 	p[0] = ("load", p[2], p[3])
+
+#def p_exp_load_as(p):
+#	'exp : LOAD file AS filetype'
+#	p[0] = ("load", p[2], p[3])
 
 def p_exp_binary_intersect(p):
 	'exp : idents INTERSECT idents'
@@ -156,19 +156,20 @@ def p_score(p):
 def p_function(p):
 	'''function : MIN
 			| MAX
+			| SUM
+			| COUNT
 			| MEAN
-			| MEDIAN
 			| MODE
 			| STDEV'''
 	p[0] = ("function", p[1])
 
-def p_optidents(p):
-	'optidents : idents'
-	p[0] = p[1]
-
-def p_optidents_empty(p):
-	'optidents : '
-	p[0] = []
+#def p_optidents(p):
+#	'optidents : idents'
+#	p[0] = p[1]
+#
+#def p_optidents_empty(p):
+#	'optidents : '
+#	p[0] = []
 
 def p_idents(p):
 	'idents : ident COMMA idents'

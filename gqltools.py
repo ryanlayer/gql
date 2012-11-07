@@ -299,7 +299,7 @@ def merge_beds(bed_list, merge_opts):
 	pybedtools.settings.KEEP_TEMPFILES=True
 
 	#{{{ parameter type checking
-	allowed_types = (gqltypes.BED3, gqltypes.BED6, gqltypes.BED12)
+	allowed_types = ('BED3', 'BED6', 'BED12')
 
 	for bed in bed_list:
 		if not ( bed.name in allowed_types ):
@@ -314,9 +314,10 @@ def merge_beds(bed_list, merge_opts):
 	if not all_beds_match:
 		raise Exception('Type mismatch in MERGE. All inputs must be the ' + \
 				'same type.')
-	#}}}
 
 	input_type = (bed_list[0]).__class__
+	#}}}
+
 
 	#{{{ combine files into one 
 	combo_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
@@ -330,14 +331,12 @@ def merge_beds(bed_list, merge_opts):
 			combo_file.write(line)
 		in_file.close()
 	combo_file.close()
-	#add_tmp_file({'val':combo_file_name, 'type':input_type, 'tmp':True})
 	add_tmp_file(input_type(combo_file_name, True))
 	#}}}
 
 	
 	# sort the combined file
 	sorted_bed = pybedtools.BedTool(combo_file_name).sort()
-	#add_tmp_file({'val':sorted_bed.fn, 'type':input_type, 'tmp':True})
 	add_tmp_file(input_type(sorted_bed.fn, True))
 
 
@@ -347,26 +346,48 @@ def merge_beds(bed_list, merge_opts):
 				  'score':'scores', \
 				  'stranded':'s'}
 
+	bedtools_functions = { 'MIN':'min', 'MAX':'max', 'SUM':'sum', \
+			'MEAN':'mean', 'MEDIAN':'median', 'MODE':'mode', \
+			'ANITMODE':'antimode', 'COLLAPSE':'collapse'}
+
+
 	kwargs = {}
+
 	for merge_opt in merge_opts:
 		if not ( merge_opt in valid_args ):
 			raise Exception('Invalid option in MERGE. ' + \
 						merge_opt + ' not supported.')
-		if (merge_opt == 'score') and (input_type in ['BED3','BED4']) :
-			raise Exception('Type mismatch in MERGE. Cannot aggregare ' + \
-					'scores with for type:' + input_type)
 
-		if (merge_opt == 'stranded') and \
-				(input_type in ['BED3','BED4','BED5']) :
-			raise Exception('Type mismatch in MERGE. Cannot aggregare ' + \
-					'scores with for type:' + input_type)
+		if merge_opt == 'score':
+			if input_type in ['BED3'] :
+				raise Exception('Type mismatch in MERGE. Cannot aggregare ' + \
+						'scores with for type:' + input_type)
+			elif not ( merge_opts[ merge_opt ] in bedtools_functions ) :
+				if merge_opts[ merge_opt ] == 'COUNT':
+					kwargs[ 'n'] = True
+				else :
+					raise Exception('Funciton not supported by MERGE. ' + \
+							merge_opts[ merge_opt ])
+			else:
+				kwargs[ valid_args[ merge_opt ] ] = \
+						bedtools_functions[ merge_opts[ merge_opt ] ]
+		elif merge_opt == 'stranded':
+			if input_type in ['BED3','BED4','BED5'] :
+				raise Exception('Type mismatch in MERGE. Cannot match by ' +
+					'strand with type:' + input_type)
+			kwargs[ valid_args[ merge_opt ] ] = True
 
-		kwargs[ valid_args[ merge_opt ] ] = merge_opts[ merge_opt ]
+		elif (merge_opt == 'distance'):
+			kwargs[ valid_args[ merge_opt ] ] = merge_opts[ merge_opt ]
 
 	# merge the file
 	merged_bed = sorted_bed.merge(**kwargs)
 
-	resul = input_type(merged_bed.fn, True)
+	output_type = gqltypes.BED3
+	if (len(kwargs) > 0) :
+		output_type = gqltypes.BED6
+
+	result = output_type(merged_bed.fn, True)
 
 	add_tmp_file(result)
 

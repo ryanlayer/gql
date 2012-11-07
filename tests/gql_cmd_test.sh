@@ -1,9 +1,9 @@
 #!/bin/bash
 
-A=../data/a.bed
-B=../data/b.bed
-C=../data/c.bed
-D=../data/d.bed
+A=../data/tiny_a.bed
+B=../data/tiny_b.bed
+C=../data/tiny_c.bed
+D=../data/tiny_d.bed
 
 TMP=.tmp.gql
 
@@ -51,3 +51,53 @@ run_test "::: SUBTRACT" \
 	e = SUBTRACT a,b;
 	PRINT e;
 	COUNT e;"
+
+run_test "::: MERGE" \
+	"a = LOAD \"$A\";
+	b = LOAD \"$B\";
+	e = MERGE a,b;
+	PRINT e;
+	COUNT e;"
+
+run_test "::: MERGE, DISTANCE" \
+	"a = LOAD \"$A\";
+	b = LOAD \"$B\";
+	e = MERGE a,b WHERE DISTANCE(10);
+	PRINT e;
+	COUNT e;"
+
+run_test "::: MERGE, DISTANCE" \
+	"a = LOAD \"$A\";
+	b = LOAD \"$B\";
+	e = MERGE a,b WHERE DISTANCE(50);
+	PRINT e;
+	COUNT e;"
+
+run_test "::: MERGE, DISTANCE, SCORE, MIN" \
+	"a = LOAD \"$A\";
+	b = LOAD \"$B\";
+	e = MERGE a,b WHERE DISTANCE(50),SCORE(MIN);
+	PRINT e;
+	COUNT e;"
+
+run_test "::: MERGE, DISTANCE, SCORE, MAX" \
+	"a = LOAD \"$A\";
+	b = LOAD \"$B\";
+	c = LOAD \"$C\";
+	e = MERGE a,b,c WHERE DISTANCE(50),SCORE(MAX);
+	PRINT e;
+	COUNT e;"
+
+run_test "::: MERGE, DISTANCE, SCORE, SUM" \
+	"a = LOAD \"$A\";
+	b = LOAD \"$B\";
+	c = LOAD \"$C\";
+	e = MERGE a,b,c WHERE DISTANCE(50),SCORE(SUM);
+	PRINT e;"
+
+run_test "::: MERGE, DISTANCE, SCORE, COUNT" \
+	"a = LOAD \"$A\";
+	b = LOAD \"$B\";
+	c = LOAD \"$C\";
+	e = MERGE a,b,c WHERE DISTANCE(50),SCORE(COUNT);
+	PRINT e;"
