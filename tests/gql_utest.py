@@ -1,3 +1,4 @@
+#!/sw/bin/python
 import random
 import unittest
 import sys
@@ -58,6 +59,18 @@ class testGQL(unittest.TestCase):
 
 	#}}}
 
+	#{{{ def test_binary_subtract(self):
+	def test_binary_subtract(self):
+
+		bed_N = gqltools.load_file('../data/a.bed','auto')
+		ordered_bed_list_M = [gqltools.load_file('../data/b.bed','auto'), \
+				gqltools.load_file('../data/d.bed','auto') ]
+
+		R = gqltools.subtract_beds(bed_N, ordered_bed_list_M)
+
+		self.assertEqual(R.__class__.__name__, bed_N.__class__.__name__)
+	#}}}
+
 	#{{{ def test_uniary_intersect(self):
 	def test_uniary_intersect(self):
 
@@ -97,7 +110,7 @@ class testGQL(unittest.TestCase):
 		self.assertEqual(len(R.val[0]), 2)
 	#}}}
 
-	#{{{ def test_binary_intersect(self):
+	#{{{ def test_merge(self):
 	def test_merge(self):
 
 		ordered_bed_list = [gqltools.load_file('../data/a.bed','auto'), \
@@ -105,14 +118,14 @@ class testGQL(unittest.TestCase):
 						gqltools.load_file('../data/d.bed','auto') ]
 
 		mods = {}
-		R = gqltools.merge_beds(ordered_bed_list, mods)
+		R = gqltools.merge_beds('max',ordered_bed_list, mods)
 
 		self.assertEqual(R.__class__.__name__, 'BED3')
 
 		for func in ['MIN', 'MAX', 'SUM', 'MEAN', 'MEDIAN', 'MODE', \
-				'ANITMODE', 'COLLAPSE']:
+				'ANITMODE', 'COLLAPSE', 'COUNT']:
 			mods = {'distance':10, 'score':func}
-			R = gqltools.merge_beds(ordered_bed_list, mods)
+			R = gqltools.merge_beds('max',ordered_bed_list, mods)
 			self.assertEqual(R.__class__.__name__, 'BED6')
 
 		#self.assertEqual(len(R.labels[0]), 1)
@@ -121,9 +134,95 @@ class testGQL(unittest.TestCase):
 		#self.assertEqual(len(R.val[0]), 2)
 	#}}}
 
+	#{{{ def test_merge_flat(self):
+	def test_merge_flat(self):
+
+		ordered_bed_list = [gqltools.load_file('../data/a.bed','auto'), \
+						gqltools.load_file('../data/b.bed','auto'), \
+						gqltools.load_file('../data/d.bed','auto') ]
+
+		mods = {}
+		R = gqltools.merge_beds('flat',ordered_bed_list, mods)
+
+		self.assertEqual(R.__class__.__name__, 'BED3')
+
+		for func in ['MIN', 'MAX', 'SUM', 'MEAN', 'MEDIAN', 'MODE', \
+				'ANITMODE', 'COLLAPSE', 'COUNT']:
+			mods = {'name':'COLLAPSE', 'score':func}
+			R = gqltools.merge_beds('flat',ordered_bed_list, mods)
+			self.assertEqual(R.__class__.__name__, 'BED6')
+
+		was_error = False
+		try:
+			mods = {'distance':10}
+			R = gqltools.merge_beds('flat',ordered_bed_list, mods)
+		except Exception:
+			was_error = True
+		self.assertTrue(was_error)
+
+		was_error = False
+		try:
+			mods = {'name':'OTHER'}
+			R = gqltools.merge_beds('flat',ordered_bed_list, mods)
+		except Exception:
+			was_error = True
+		self.assertTrue(was_error)
+
+
+
+
+		#self.assertEqual(len(R.labels[0]), 1)
+		#self.assertEqual(len(R.labels[1]), 2)
+		#self.assertEqual(len(R.val), 1)
+		#self.assertEqual(len(R.val[0]), 2)
+	#}}}
+
+	#{{{ def test_merge_min(self):
+	def test_merge_min(self):
+
+		ordered_bed_list = [gqltools.load_file('../data/a.bed','auto'), \
+						gqltools.load_file('../data/b.bed','auto'), \
+						gqltools.load_file('../data/d.bed','auto') ]
+
+		mods = {}
+		R = gqltools.merge_beds('min',ordered_bed_list, mods)
+
+		self.assertEqual(R.__class__.__name__, 'BED3')
+
+		for func in ['MIN', 'MAX', 'SUM', 'MEAN', 'MEDIAN', 'MODE', \
+				'ANITMODE', 'COLLAPSE', 'COUNT']:
+			mods = {'name':'COLLAPSE', 'score':func}
+			R = gqltools.merge_beds('min',ordered_bed_list, mods)
+			self.assertEqual(R.__class__.__name__, 'BED6')
+
+		was_error = False
+		try:
+			mods = {'distance':10}
+			R = gqltools.merge_beds('min',ordered_bed_list, mods)
+		except Exception:
+			was_error = True
+		self.assertTrue(was_error)
+
+		was_error = False
+		try:
+			mods = {'name':'OTHER'}
+			R = gqltools.merge_beds('min',ordered_bed_list, mods)
+		except Exception:
+			was_error = True
+		self.assertTrue(was_error)
+
+
+
+
+		#self.assertEqual(len(R.labels[0]), 1)
+		#self.assertEqual(len(R.labels[1]), 2)
+		#self.assertEqual(len(R.val), 1)
+		#self.assertEqual(len(R.val[0]), 2)
+	#}}}
+
 	#{{{ def tearDown(self):
-	def tearDown(self):
-		gqltools.clear_tmp_files()
+	#def tearDown(self):
+		#gqltools.clear_tmp_files()
 	#}}}
 
 

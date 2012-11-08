@@ -170,13 +170,14 @@ def eval_exp(exp, env):
 	elif etype == 'subtract':
 		# ('subtract',
 		#	[('identifier', 'a'), ('identifier', 'b')])
-		idents = exp[1]
+		ident = exp[1]
+		bedfile = eval_exp(ident, env)
+		idents = exp[2]
 		bedfiles = []
-		types = []
 		for ident in idents:
 			bedfiles = bedfiles + [ eval_exp(ident, env) ]
 
-		return gqltools.subtract_beds(bedfiles)	
+		return gqltools.subtract_beds(bedfile, bedfiles)	
 	#}}}
 
 	#{{{ elif etype == 'mergemin':
@@ -201,8 +202,9 @@ def eval_exp(exp, env):
 		# ('merge', 
 		#	[('identifier', 'a'), ('identifier', 'b'), ('identifier', 'c')], 
 		#	None)
-		idents = exp[1]
-		modifiers = exp[2]
+		merge_type = exp[1]
+		idents = exp[2]
+		modifiers = exp[3]
 		bedfiles = []
 		for ident in idents:
 			bedx = eval_exp(ident, env)
@@ -216,17 +218,9 @@ def eval_exp(exp, env):
 				raise Exception('Multiple definitions of ' + \
 						modifier_type + '.')
 
-			if modifier_type == 'score':
-				#('score', ('function', 'MIN'))
-				function_type = eval_exp(modifier[1], env)
-				mods['score'] = function_type
+			mods[modifier_type] = eval_exp(modifier[1], env)
 
-			elif modifier_type == 'distance':
-				#('distance', ('number', 10.0))
-				number = eval_exp(modifier[1], env)
-				mods['distance'] = number
-
-		return gqltools.merge_beds(bedfiles, mods)
+		return gqltools.merge_beds(merge_type,bedfiles, mods)
 	#}}}
 
 	#{{{ simple rules

@@ -108,21 +108,24 @@ def p_exp_unary_intersect(p):
 	p[0] = ("unary-intersect",  p[2] )
 
 def p_exp_subtract(p):
-	'exp : SUBTRACT idents'
-	p[0] = ("subtract",  p[2] )
+	'exp : ident SUBTRACT idents'
+	p[0] = ("subtract",  p[1], p[3] )
 
 def p_exp_merge_min(p):
 	'exp : MERGEMIN idents optmods'
-	p[0] = ("mergemin",  p[2], p[3] )
+	p[0] = ("merge", "min",  p[2], p[3] )
 
-def p_exp_merge(p):
-	'exp : MERGE idents optmods'
-	p[0] = ("merge", p[2], p[3] )
+def p_exp_merge_flat(p):
+	'exp : MERGEFLAT idents optmods'
+	p[0] = ("merge", "flat",  p[2], p[3] )
+
+def p_exp_merge_max(p):
+	'exp : MERGEMAX idents optmods'
+	p[0] = ("merge", "max", p[2], p[3] )
 
 def p_exp_CAST(p):
 	'exp : CAST ident AS filetype optmods'
 	p[0] = ("cast", p[2], p[4], p[5] )
-
 
 def p_exp_optmods(p):
 	'optmods : WHERE mods'
@@ -142,8 +145,14 @@ def p_exp_mods_one(p):
 
 def p_exp_mod(p):
 	'''mod : distance
-		| score'''
+		| score
+		| name'''
 	p[0] =  p[1]
+
+def p_name(p):
+	'name : NAME LPAREN function RPAREN'
+	p[0] = ("name", p[3])
+
 
 def p_distance(p):
 	'distance : DISTANCE LPAREN number RPAREN'
@@ -159,7 +168,10 @@ def p_function(p):
 			| SUM
 			| COUNT
 			| MEAN
+			| MEDIAN
 			| MODE
+			| ANTIMODE
+			| COLLAPSE  
 			| STDEV'''
 	p[0] = ("function", p[1])
 

@@ -264,18 +264,18 @@ def unary_intersect_beds(ordered_bed_list, bed_labels):
 #}}}
 
 #{{{ def subtract_beds(ordered_bed_list):
-def subtract_beds(ordered_bed_list):
+def subtract_beds(bed_file, ordered_bed_list):
 
 	allowed_types = ('BED3', 'BED6', 'BED12')
 
-	for bed in ordered_bed_list:
+	for bed in [bed_file] + ordered_bed_list:
 		if not ( bed.name in allowed_types ):
 			raise Exception('Type mismatch in SUBTRACT. ' +
 					bed.name + ' not supported.')
 	
 	pybedtools.settings.KEEP_TEMPFILES=True
 
-	bed_queue = deque(ordered_bed_list)
+	bed_queue = deque([bed_file] + ordered_bed_list)
 	while ( len(bed_queue) > 1 ):
 		A = bed_queue.popleft()
 		A_bed = pybedtools.BedTool( A.val )
@@ -295,7 +295,7 @@ def subtract_beds(ordered_bed_list):
 #}}}
 
 #{{{ def merge_beds(bed_list, merge_opts):
-def merge_beds(bed_list, merge_opts):
+def merge_beds(merge_type, bed_list, merge_opts):
 	pybedtools.settings.KEEP_TEMPFILES=True
 
 	#{{{ parameter type checking
@@ -317,39 +317,19 @@ def merge_beds(bed_list, merge_opts):
 
 	input_type = (bed_list[0]).__class__
 	#}}}
-
-
-	#{{{ combine files into one 
-	combo_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
-									 'merge_beds', \
-									 'tmp')
-
-	combo_file = open(combo_file_name, 'w')
-	for bed in bed_list:
-		in_file = open(bed.val, 'r')
-		for line in in_file:
-			combo_file.write(line)
-		in_file.close()
-	combo_file.close()
-	add_tmp_file(input_type(combo_file_name, True))
-	#}}}
-
 	
-	# sort the combined file
-	sorted_bed = pybedtools.BedTool(combo_file_name).sort()
-	add_tmp_file(input_type(sorted_bed.fn, True))
-
 
 	# Parse input arguments and add/modify default argumetns
 	# Default args
 	valid_args = {'distance':'d', \
 				  'score':'scores', \
+				  'name':'nms', \
 				  'stranded':'s'}
 
-	bedtools_functions = { 'MIN':'min', 'MAX':'max', 'SUM':'sum', \
+	score_functions = { 'MIN':'min', 'MAX':'max', 'SUM':'sum', \
 			'MEAN':'mean', 'MEDIAN':'median', 'MODE':'mode', \
-			'ANITMODE':'antimode', 'COLLAPSE':'collapse'}
-
+			'ANITMODE':'antimode', 'COLLAPSE':'collapse',
+			'COUNT':'count'}
 
 	kwargs = {}
 
@@ -359,34 +339,87 @@ def merge_beds(bed_list, merge_opts):
 						merge_opt + ' not supported.')
 
 		if merge_opt == 'score':
-			if input_type in ['BED3'] :
+			if input_type.__name__ in ['BED3'] :
 				raise Exception('Type mismatch in MERGE. Cannot aggregare ' + \
-						'scores with for type:' + input_type)
-			elif not ( merge_opts[ merge_opt ] in bedtools_functions ) :
-				if merge_opts[ merge_opt ] == 'COUNT':
-					kwargs[ 'n'] = True
-				else :
-					raise Exception('Funciton not supported by MERGE. ' + \
-							merge_opts[ merge_opt ])
+						'scores with type:' + input_type.__name__)
+			elif not ( merge_opts[ merge_opt ] in score_functions ) :
+				raise Exception('SCORE funciton not supported by MERGE. ' + \
+						merge_opts[ merge_opt ])
 			else:
 				kwargs[ valid_args[ merge_opt ] ] = \
-						bedtools_functions[ merge_opts[ merge_opt ] ]
+						score_functions[ merge_opts[ merge_opt ] ]
 		elif merge_opt == 'stranded':
-			if input_type in ['BED3','BED4','BED5'] :
+			if input_type.__name__ in ['BED3','BED4','BED5'] :
 				raise Exception('Type mismatch in MERGE. Cannot match by ' +
-					'strand with type:' + input_type)
+					'strand with type:' + input_type.__name__)
 			kwargs[ valid_args[ merge_opt ] ] = True
 
 		elif (merge_opt == 'distance'):
-			kwargs[ valid_args[ merge_opt ] ] = merge_opts[ merge_opt ]
+			if merge_type in ['flat','min']:
+				raise Exception('DISTANCE not supported for MERGE FLAT')
+			else:
+				kwargs[ valid_args[ merge_opt ] ] = merge_opts[ merge_opt ]
 
-	# merge the file
-	merged_bed = sorted_bed.merge(**kwargs)
+		elif (merge_opt == 'name'):
+			if input_type.__name__ in ['BED3'] :
+				raise Exception('Type mismatch in MERGE. Cannot aggregare ' + \
+						'names with type:' + input_type.__name__)
+			if merge_opts[ merge_opt ] == 'COLLAPSE':
+				kwargs[ valid_args[ merge_opt ] ] = True
+			else :
+				raise Exception('NAME funciton not supported by MERGE. ' + \
+						merge_opts[ merge_opt ])
+	
 
 	output_type = gqltypes.BED3
 	if (len(kwargs) > 0) :
 		output_type = gqltypes.BED6
 
+	# merge the file
+	merge_bed = pybedtools.BedTool()
+
+	if merge_type == 'max':
+		#{{{ combine files into one 
+		combo_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
+										 'merge_beds', \
+										 'tmp')
+
+		combo_file = open(combo_file_name, 'w')
+		for bed in bed_list:
+			in_file = open(bed.val, 'r')
+			for line in in_file:
+				combo_file.write(line)
+			in_file.close()
+		combo_file.close()
+		add_tmp_file(input_type(combo_file_name, True))
+		# sort the combined file
+		sorted_bed = pybedtools.BedTool(combo_file_name).sort()
+		add_tmp_file(input_type(sorted_bed.fn, True))
+
+		#}}}
+		merged_bed = sorted_bed.merge(**kwargs)
+	elif ( merge_type == 'flat' ) or (merge_type == 'min'):
+		#{{{ sort each file, make list of files
+		# make sure all the input files are sorted
+		sorted_beds = []
+		sorted_bed_files = []
+		for bed in bed_list:
+			sorted_bed = pybedtools.BedTool(bed.val).sort()
+			add_tmp_file(input_type(sorted_bed.fn, True))
+			sorted_beds.append(sorted_bed)
+			sorted_bed_files.append(sorted_bed.fn)
+
+		kwargs['gql'] = True
+		kwargs['i'] = sorted_bed_files[1:]
+		#}}}
+		if merge_type == 'flat':
+			merged_bed = sorted_beds[0].multi_intersect(**kwargs)
+		elif merge_type == 'min':
+			kwargs['cluster'] = True
+			merged_bed = sorted_beds[0].multi_intersect(**kwargs)
+	else:
+		raise Exception('Supported by MERGE. ' + merge_type)
+	
 	result = output_type(merged_bed.fn, True)
 
 	add_tmp_file(result)

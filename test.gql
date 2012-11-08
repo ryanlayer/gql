@@ -7,6 +7,10 @@ b = LOAD "data/b.bed" AS BED6;
 c = LOAD "data/c.bed" AS BED6;
 d = LOAD "data/d.bed";
 
+e = MERGEMAX a,b,c,d WHERE SCORE(SUM);
+
+PRINT e;
+
 # test intersect
 #e = INTERSECT a,b,c,d;
 

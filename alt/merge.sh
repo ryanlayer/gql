@@ -11,8 +11,8 @@ echo "bedtools merge -i $ABC_SORT"
 bedtools merge -i $ABC_SORT
 echo "bedtools merge -i $ABC_SORT -nms"
 bedtools merge -i $ABC_SORT -nms
-echo "bedtools merge -i $ABC_SORT -scores sum"
-bedtools merge -i $ABC_SORT -scores sum
+echo "bedtools merge -i $ABC_SORT -scores count"
+bedtools merge -i $ABC_SORT -scores count
 echo "bedtools merge -i $ABC_SORT -s"
 bedtools merge -i $ABC_SORT -s
 
@@ -24,12 +24,12 @@ c = sorted_bed.merge()
 print c
 c = sorted_bed.merge(nms=True)
 print c
-c = sorted_bed.merge(scores='sum')
+c = sorted_bed.merge(scores='count')
 print c
 c = sorted_bed.merge(s=True)
 print c
-c = sorted_bed.merge(d=50, scores='sum')
+c = sorted_bed.merge(d=50, scores='count')
 print c
-c = sorted_bed.merge(d=50, scores='sum')
+c = sorted_bed.merge(d=50, scores='count')
 print c
 END

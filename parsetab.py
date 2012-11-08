@@ -5,9 +5,9 @@ _tabversion = '3.2'
 
 _lr_method = 'LALR'
 
-_lr_signature = '\xfb9\xd7\\\xaa$f\xcf0\xfaV!\x1dCP{'
+_lr_signature = '\xf5\xba"i\x94\x11X)\'F$wP\xbd=,'
     
-_lr_action_items = {'LOAD':([0,1,5,16,27,34,40,43,47,61,67,],[1,1,-3,1,1,-8,-6,-5,1,-4,-7,]),'LPAREN':([56,57,],[63,64,]),'MIN':([64,],[72,]),'MERGEMIN':([0,1,5,16,27,34,40,43,47,61,67,],[2,2,-3,2,2,-8,-6,-5,2,-4,-7,]),'SUM':([64,],[74,]),'NUMBER':([0,1,5,16,27,34,40,43,47,61,63,67,],[11,11,-3,11,11,-8,-6,-5,11,-4,69,-7,]),'PRINT':([0,5,16,34,40,43,61,67,],[3,-3,3,-8,-6,-5,-4,-7,]),'SUBTRACT':([0,1,5,16,27,34,40,43,47,61,67,],[4,4,-3,4,4,-8,-6,-5,4,-4,-7,]),'RPAREN':([68,69,70,71,72,73,74,75,76,77,],[79,-11,80,-39,-36,-37,-38,-41,-42,-40,]),'SEMICOLON':([7,9,11,13,17,19,20,21,22,23,24,25,28,30,32,37,38,42,44,45,46,48,49,50,51,52,53,54,55,58,59,60,62,66,78,79,80,],[-9,-12,-10,-44,34,-15,-13,-9,-29,-45,40,-24,43,-29,-23,-21,-25,61,-22,-26,-43,-14,-17,-19,-16,-20,-18,-32,-28,-33,-31,-29,67,-27,-30,-34,-35,]),'CAST':([0,1,5,16,27,34,40,43,47,61,67,],[6,6,-3,6,6,-8,-6,-5,6,-4,-7,]),'COMMA':([7,13,21,23,54,58,59,79,80,],[-45,31,-45,-45,-32,-33,65,-34,-35,]),'GENOME':([36,41,],[52,52,]),'MODE':([64,],[75,]),'IDENTIFIER':([0,1,2,3,4,5,6,8,12,14,16,18,27,29,31,34,40,43,47,61,67,],[7,21,23,23,23,-3,23,23,23,23,7,23,21,23,23,-8,-6,-5,21,-4,-7,]),'BED12':([36,41,],[50,50,]),'COUNT':([0,5,16,34,40,43,61,64,67,],[8,-3,8,-8,-6,-5,-4,71,-7,]),'STRING':([0,1,5,16,27,34,40,43,47,61,67,],[9,9,-3,9,9,-8,-6,-5,9,-4,-7,]),'STDEV':([64,],[76,]),'EQUAL':([7,],[27,]),'BED3':([36,41,],[49,49,]),'MERGE':([0,1,5,16,27,34,40,43,47,61,67,],[12,12,-3,12,12,-8,-6,-5,12,-4,-7,]),'AS':([9,11,13,19,20,21,22,23,25,26,30,32,35,37,38,44,45,46,48,49,50,51,52,53,54,55,58,59,60,66,78,79,80,],[-12,-10,-44,36,-13,-9,-29,-45,-24,41,-29,-23,47,-21,-25,-22,-26,-43,-14,-17,-19,-16,-20,-18,-32,-28,-33,-31,-29,-27,-30,-34,-35,]),'SCORE':([39,65,],[57,57,]),'BED6':([36,41,],[53,53,]),'INTERSECT':([0,1,5,7,10,13,16,21,23,27,34,40,43,46,47,61,67,],[14,14,-3,-45,29,-44,14,-45,-45,14,-8,-6,-5,-43,14,-4,-7,]),'WHERE':([13,22,23,30,46,49,50,51,52,53,60,],[-44,39,-45,39,-43,-17,-19,-16,-20,-18,39,]),'$end':([0,5,15,16,33,34,40,43,61,67,],[-2,-3,0,-2,-1,-8,-6,-5,-4,-7,]),'DISTANCE':([39,65,],[56,56,]),'MAX':([64,],[73,]),'MEAN':([64,],[77,]),'SAVE':([0,5,16,34,40,43,61,67,],[18,-3,18,-8,-6,-5,-4,-7,]),}
+_lr_action_items = {'LOAD':([0,1,4,15,27,36,42,45,51,67,74,],[1,1,-3,1,1,-8,-6,-5,1,-4,-7,]),'LPAREN':([61,62,64,],[69,70,71,]),'MIN':([70,71,],[80,80,]),'MERGEMIN':([0,1,4,15,27,36,42,45,51,67,74,],[2,2,-3,2,2,-8,-6,-5,2,-4,-7,]),'ANTIMODE':([70,71,],[86,86,]),'SUM':([70,71,],[82,82,]),'NUMBER':([0,1,4,15,27,36,42,45,51,67,69,74,],[10,10,-3,10,10,-8,-6,-5,10,-4,76,-7,]),'PRINT':([0,4,15,36,42,45,67,74,],[3,-3,3,-8,-6,-5,-4,-7,]),'SUBTRACT':([6,11,21,],[-51,31,-51,]),'COLLAPSE':([70,71,],[79,79,]),'RPAREN':([75,76,77,78,79,80,81,82,83,84,85,86,87,88,],[90,-11,91,-42,-47,-39,-40,-41,-48,-44,-45,-46,-43,92,]),'SEMICOLON':([6,8,10,17,19,20,21,22,23,24,25,28,32,33,35,39,40,44,46,47,48,49,50,52,53,54,55,56,57,58,59,60,63,65,66,68,73,89,90,91,92,],[-9,-12,-10,36,-15,-13,-9,-50,-30,-51,42,45,-23,-30,-30,-21,-25,67,-22,-49,-24,-27,-26,-14,-17,-19,-16,-20,-18,-33,-29,-35,-34,-32,-30,74,-28,-31,-37,-38,-36,]),'MERGEFLAT':([0,1,4,15,27,36,42,45,51,67,74,],[16,16,-3,16,16,-8,-6,-5,16,-4,-7,]),'MEDIAN':([70,71,],[84,84,]),'BED12':([38,43,],[54,54,]),'CAST':([0,1,4,15,27,36,42,45,51,67,74,],[5,5,-3,5,5,-8,-6,-5,5,-4,-7,]),'COMMA':([6,11,21,22,24,58,60,63,65,90,91,92,],[-51,30,-51,30,-51,-33,-35,-34,72,-37,-38,-36,]),'GENOME':([38,43,],[56,56,]),'STDEV':([70,71,],[83,83,]),'IDENTIFIER':([0,1,2,3,4,5,7,12,14,15,16,18,27,29,30,31,36,42,45,51,67,74,],[6,21,24,24,-3,24,24,24,24,6,24,24,21,24,24,24,-8,-6,-5,21,-4,-7,]),'$end':([0,4,13,15,34,36,42,45,67,74,],[-2,-3,0,-2,-1,-8,-6,-5,-4,-7,]),'COUNT':([0,4,15,36,42,45,67,70,71,74,],[7,-3,7,-8,-6,-5,-4,78,78,-7,]),'STRING':([0,1,4,15,27,36,42,45,51,67,74,],[8,8,-3,8,8,-8,-6,-5,8,-4,-7,]),'MODE':([70,71,],[85,85,]),'EQUAL':([6,],[27,]),'BED3':([38,43,],[53,53,]),'AS':([8,10,19,20,21,22,23,24,26,32,33,35,37,39,40,46,47,48,49,50,52,53,54,55,56,57,58,59,60,63,65,66,73,89,90,91,92,],[-12,-10,38,-13,-9,-50,-30,-51,43,-23,-30,-30,51,-21,-25,-22,-49,-24,-27,-26,-14,-17,-19,-16,-20,-18,-33,-29,-35,-34,-32,-30,-28,-31,-37,-38,-36,]),'SCORE':([41,72,],[62,62,]),'BED6':([38,43,],[57,57,]),'INTERSECT':([0,1,4,6,9,11,15,21,22,24,27,36,42,45,47,51,67,74,],[12,12,-3,-51,29,-50,12,-51,-50,-51,12,-8,-6,-5,-49,12,-4,-7,]),'WHERE':([22,23,24,33,35,47,53,54,55,56,57,66,],[-50,41,-51,41,41,-49,-17,-19,-16,-20,-18,41,]),'DISTANCE':([41,72,],[61,61,]),'NAME':([41,72,],[64,64,]),'MERGEMAX':([0,1,4,15,27,36,42,45,51,67,74,],[14,14,-3,14,14,-8,-6,-5,14,-4,-7,]),'MAX':([70,71,],[81,81,]),'MEAN':([70,71,],[87,87,]),'SAVE':([0,4,15,36,42,45,67,74,],[18,-3,18,-8,-6,-5,-4,-7,]),}
 
 _lr_action = { }
 for _k, _v in _lr_action_items.items():
@@ -16,7 +16,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'function':([64,],[70,]),'distance':([39,65,],[54,54,]),'ident':([0,1,2,3,4,6,8,12,14,16,18,27,29,31,47,],[13,13,13,24,13,26,28,13,13,13,35,13,13,13,13,]),'number':([63,],[68,]),'file':([1,47,],[19,62,]),'idents':([0,1,2,4,12,14,16,27,29,31,47,],[10,10,22,25,30,32,10,10,44,46,10,]),'sstmt':([0,16,],[5,5,]),'filetype':([36,41,],[48,60,]),'optfiletype':([19,],[37,]),'mods':([39,65,],[55,78,]),'element':([0,16,],[16,16,]),'gql':([0,16,],[15,33,]),'exp':([0,1,16,27,47,],[17,20,17,42,20,]),'mod':([39,65,],[59,59,]),'score':([39,65,],[58,58,]),'filetypes':([36,41,],[51,51,]),'optmods':([22,30,60,],[38,45,66,]),}
+_lr_goto_items = {'function':([70,71,],[77,88,]),'distance':([41,72,],[58,58,]),'ident':([0,1,2,3,5,7,12,14,15,16,18,27,29,30,31,51,],[11,11,22,25,26,28,22,22,11,22,37,11,22,22,22,11,]),'number':([69,],[75,]),'file':([1,51,],[19,68,]),'name':([41,72,],[60,60,]),'idents':([0,1,2,12,14,15,16,27,29,30,31,51,],[9,9,23,32,33,9,35,9,46,47,48,9,]),'sstmt':([0,15,],[4,4,]),'filetype':([38,43,],[52,66,]),'optfiletype':([19,],[39,]),'mods':([41,72,],[59,89,]),'element':([0,15,],[15,15,]),'gql':([0,15,],[13,34,]),'exp':([0,1,15,27,51,],[17,20,17,44,20,]),'mod':([41,72,],[65,65,]),'score':([41,72,],[63,63,]),'filetypes':([38,43,],[55,55,]),'optmods':([23,33,35,66,],[40,49,50,73,]),}
 
 _lr_goto = { }
 for _k, _v in _lr_goto_items.items():
@@ -26,49 +26,55 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> gql","S'",1,None,None,None),
-  ('gql -> element gql','gql',2,'p_gql','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',14),
-  ('gql -> <empty>','gql',0,'p_gql_empty','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',19),
-  ('element -> sstmt','element',1,'p_element_stmt','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',23),
-  ('sstmt -> IDENTIFIER EQUAL exp SEMICOLON','sstmt',4,'p_sstmt_assignment','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',37),
-  ('sstmt -> COUNT ident SEMICOLON','sstmt',3,'p_sstmt_count','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',42),
-  ('sstmt -> PRINT ident SEMICOLON','sstmt',3,'p_sstmt_print','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',46),
-  ('sstmt -> SAVE ident AS file SEMICOLON','sstmt',5,'p_sstmt_save','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',50),
-  ('sstmt -> exp SEMICOLON','sstmt',2,'p_sstmt_exp','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',54),
-  ('exp -> IDENTIFIER','exp',1,'p_exp_identifier','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',59),
-  ('exp -> NUMBER','exp',1,'p_exp_number','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',63),
-  ('number -> NUMBER','number',1,'p_number_number','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',67),
-  ('exp -> STRING','exp',1,'p_exp_string','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',72),
-  ('file -> exp','file',1,'p_file','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',76),
-  ('optfiletype -> AS filetype','optfiletype',2,'p_optfiletype','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',80),
-  ('optfiletype -> <empty>','optfiletype',0,'p_optfiletype_empty','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',84),
-  ('filetype -> filetypes','filetype',1,'p_filetype','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',88),
-  ('filetypes -> BED3','filetypes',1,'p_filetypes','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',92),
-  ('filetypes -> BED6','filetypes',1,'p_filetypes','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',93),
-  ('filetypes -> BED12','filetypes',1,'p_filetypes','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',94),
-  ('filetypes -> GENOME','filetypes',1,'p_filetypes','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',95),
-  ('exp -> LOAD file optfiletype','exp',3,'p_exp_load','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',99),
-  ('exp -> idents INTERSECT idents','exp',3,'p_exp_binary_intersect','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',107),
-  ('exp -> INTERSECT idents','exp',2,'p_exp_unary_intersect','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',111),
-  ('exp -> SUBTRACT idents','exp',2,'p_exp_subtract','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',115),
-  ('exp -> MERGEMIN idents optmods','exp',3,'p_exp_merge_min','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',119),
-  ('exp -> MERGE idents optmods','exp',3,'p_exp_merge','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',123),
-  ('exp -> CAST ident AS filetype optmods','exp',5,'p_exp_CAST','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',127),
-  ('optmods -> WHERE mods','optmods',2,'p_exp_optmods','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',132),
-  ('optmods -> <empty>','optmods',0,'p_exp_optmods_empty','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',136),
-  ('mods -> mod COMMA mods','mods',3,'p_exp_mods','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',140),
-  ('mods -> mod','mods',1,'p_exp_mods_one','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',144),
-  ('mod -> distance','mod',1,'p_exp_mod','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',148),
-  ('mod -> score','mod',1,'p_exp_mod','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',149),
-  ('distance -> DISTANCE LPAREN number RPAREN','distance',4,'p_distance','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',153),
-  ('score -> SCORE LPAREN function RPAREN','score',4,'p_score','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',157),
-  ('function -> MIN','function',1,'p_function','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',162),
-  ('function -> MAX','function',1,'p_function','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',163),
-  ('function -> SUM','function',1,'p_function','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',164),
-  ('function -> COUNT','function',1,'p_function','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',165),
-  ('function -> MEAN','function',1,'p_function','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',166),
-  ('function -> MODE','function',1,'p_function','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',167),
-  ('function -> STDEV','function',1,'p_function','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',168),
-  ('idents -> ident COMMA idents','idents',3,'p_idents','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',181),
-  ('idents -> ident','idents',1,'p_idents_one','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',186),
-  ('ident -> IDENTIFIER','ident',1,'p_idnent_identifier','/Users/rl6sf/src/gql.bak/gql/gqlgrammar.py',190),
+  ('gql -> element gql','gql',2,'p_gql','/Users/rl6sf/src/gql/gqlgrammar.py',14),
+  ('gql -> <empty>','gql',0,'p_gql_empty','/Users/rl6sf/src/gql/gqlgrammar.py',18),
+  ('element -> sstmt','element',1,'p_element_stmt','/Users/rl6sf/src/gql/gqlgrammar.py',22),
+  ('sstmt -> IDENTIFIER EQUAL exp SEMICOLON','sstmt',4,'p_sstmt_assignment','/Users/rl6sf/src/gql/gqlgrammar.py',35),
+  ('sstmt -> COUNT ident SEMICOLON','sstmt',3,'p_sstmt_count','/Users/rl6sf/src/gql/gqlgrammar.py',39),
+  ('sstmt -> PRINT ident SEMICOLON','sstmt',3,'p_sstmt_print','/Users/rl6sf/src/gql/gqlgrammar.py',43),
+  ('sstmt -> SAVE ident AS file SEMICOLON','sstmt',5,'p_sstmt_save','/Users/rl6sf/src/gql/gqlgrammar.py',47),
+  ('sstmt -> exp SEMICOLON','sstmt',2,'p_sstmt_exp','/Users/rl6sf/src/gql/gqlgrammar.py',51),
+  ('exp -> IDENTIFIER','exp',1,'p_exp_identifier','/Users/rl6sf/src/gql/gqlgrammar.py',55),
+  ('exp -> NUMBER','exp',1,'p_exp_number','/Users/rl6sf/src/gql/gqlgrammar.py',59),
+  ('number -> NUMBER','number',1,'p_number_number','/Users/rl6sf/src/gql/gqlgrammar.py',63),
+  ('exp -> STRING','exp',1,'p_exp_string','/Users/rl6sf/src/gql/gqlgrammar.py',68),
+  ('file -> exp','file',1,'p_file','/Users/rl6sf/src/gql/gqlgrammar.py',72),
+  ('optfiletype -> AS filetype','optfiletype',2,'p_optfiletype','/Users/rl6sf/src/gql/gqlgrammar.py',76),
+  ('optfiletype -> <empty>','optfiletype',0,'p_optfiletype_empty','/Users/rl6sf/src/gql/gqlgrammar.py',80),
+  ('filetype -> filetypes','filetype',1,'p_filetype','/Users/rl6sf/src/gql/gqlgrammar.py',84),
+  ('filetypes -> BED3','filetypes',1,'p_filetypes','/Users/rl6sf/src/gql/gqlgrammar.py',88),
+  ('filetypes -> BED6','filetypes',1,'p_filetypes','/Users/rl6sf/src/gql/gqlgrammar.py',89),
+  ('filetypes -> BED12','filetypes',1,'p_filetypes','/Users/rl6sf/src/gql/gqlgrammar.py',90),
+  ('filetypes -> GENOME','filetypes',1,'p_filetypes','/Users/rl6sf/src/gql/gqlgrammar.py',91),
+  ('exp -> LOAD file optfiletype','exp',3,'p_exp_load','/Users/rl6sf/src/gql/gqlgrammar.py',95),
+  ('exp -> idents INTERSECT idents','exp',3,'p_exp_binary_intersect','/Users/rl6sf/src/gql/gqlgrammar.py',103),
+  ('exp -> INTERSECT idents','exp',2,'p_exp_unary_intersect','/Users/rl6sf/src/gql/gqlgrammar.py',107),
+  ('exp -> ident SUBTRACT idents','exp',3,'p_exp_subtract','/Users/rl6sf/src/gql/gqlgrammar.py',111),
+  ('exp -> MERGEMIN idents optmods','exp',3,'p_exp_merge_min','/Users/rl6sf/src/gql/gqlgrammar.py',115),
+  ('exp -> MERGEFLAT idents optmods','exp',3,'p_exp_merge_flat','/Users/rl6sf/src/gql/gqlgrammar.py',119),
+  ('exp -> MERGEMAX idents optmods','exp',3,'p_exp_merge_max','/Users/rl6sf/src/gql/gqlgrammar.py',123),
+  ('exp -> CAST ident AS filetype optmods','exp',5,'p_exp_CAST','/Users/rl6sf/src/gql/gqlgrammar.py',127),
+  ('optmods -> WHERE mods','optmods',2,'p_exp_optmods','/Users/rl6sf/src/gql/gqlgrammar.py',131),
+  ('optmods -> <empty>','optmods',0,'p_exp_optmods_empty','/Users/rl6sf/src/gql/gqlgrammar.py',135),
+  ('mods -> mod COMMA mods','mods',3,'p_exp_mods','/Users/rl6sf/src/gql/gqlgrammar.py',139),
+  ('mods -> mod','mods',1,'p_exp_mods_one','/Users/rl6sf/src/gql/gqlgrammar.py',143),
+  ('mod -> distance','mod',1,'p_exp_mod','/Users/rl6sf/src/gql/gqlgrammar.py',147),
+  ('mod -> score','mod',1,'p_exp_mod','/Users/rl6sf/src/gql/gqlgrammar.py',148),
+  ('mod -> name','mod',1,'p_exp_mod','/Users/rl6sf/src/gql/gqlgrammar.py',149),
+  ('name -> NAME LPAREN function RPAREN','name',4,'p_name','/Users/rl6sf/src/gql/gqlgrammar.py',153),
+  ('distance -> DISTANCE LPAREN number RPAREN','distance',4,'p_distance','/Users/rl6sf/src/gql/gqlgrammar.py',158),
+  ('score -> SCORE LPAREN function RPAREN','score',4,'p_score','/Users/rl6sf/src/gql/gqlgrammar.py',162),
+  ('function -> MIN','function',1,'p_function','/Users/rl6sf/src/gql/gqlgrammar.py',166),
+  ('function -> MAX','function',1,'p_function','/Users/rl6sf/src/gql/gqlgrammar.py',167),
+  ('function -> SUM','function',1,'p_function','/Users/rl6sf/src/gql/gqlgrammar.py',168),
+  ('function -> COUNT','function',1,'p_function','/Users/rl6sf/src/gql/gqlgrammar.py',169),
+  ('function -> MEAN','function',1,'p_function','/Users/rl6sf/src/gql/gqlgrammar.py',170),
+  ('function -> MEDIAN','function',1,'p_function','/Users/rl6sf/src/gql/gqlgrammar.py',171),
+  ('function -> MODE','function',1,'p_function','/Users/rl6sf/src/gql/gqlgrammar.py',172),
+  ('function -> ANTIMODE','function',1,'p_function','/Users/rl6sf/src/gql/gqlgrammar.py',173),
+  ('function -> COLLAPSE','function',1,'p_function','/Users/rl6sf/src/gql/gqlgrammar.py',174),
+  ('function -> STDEV','function',1,'p_function','/Users/rl6sf/src/gql/gqlgrammar.py',175),
+  ('idents -> ident COMMA idents','idents',3,'p_idents','/Users/rl6sf/src/gql/gqlgrammar.py',187),
+  ('idents -> ident','idents',1,'p_idents_one','/Users/rl6sf/src/gql/gqlgrammar.py',192),
+  ('ident -> IDENTIFIER','ident',1,'p_idnent_identifier','/Users/rl6sf/src/gql/gqlgrammar.py',196),
 ]
