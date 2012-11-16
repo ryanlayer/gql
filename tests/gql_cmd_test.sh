@@ -1,9 +1,13 @@
 #!/bin/bash
 
+VERBOSE=$1
+
 A=../data/tiny_a.bed
 B=../data/tiny_b.bed
 C=../data/tiny_c.bed
 D=../data/tiny_d.bed
+
+L=../data/tiny_*.bed
 
 TMP=.tmp.gql
 
@@ -12,27 +16,35 @@ GQL=../gql.py
 function run_test {
 	echo $1
 	echo $2 > $TMP
-	R=`$GQL $TMP`
+	$GQL $TMP > $TMP.out
 	E=$?
 	if [ $E -ne $3 ]
 	then
-		echo $R
+		cat $TMP.out
+	elif [ $4 -eq 1 ]
+	then
+		cat $TMP.out
 	fi
 	rm $TMP
+	rm $TMP.out
 }
 
 run_test "1 ::: LOAD, PRINT" \
 	"a = LOAD \"$A\";PRINT a;" \
-	0
+	0 \
+	$VERBOSE
 
 run_test "2 ::: LOAD AS, COUNT"  \
 	"a = LOAD \"$A\" AS BED6;PRINT a;COUNT a;" \
-	0
+	0 \
+	$VERBOSE
 
 run_test "3 ::: Wrong file type on LOAD" "a = LOAD \"$A\" AS BED3;" \
-	0
+	0 \
+	$VERBOSE
 run_test "4 ::: Wrong file type on LOAD" "a = LOAD \"$A\" AS BED12;" \
-	0
+	0 \
+	$VERBOSE
 
 run_test "5 ::: Binary INTERSECT, COUNT BEDM" \
 	"a = LOAD \"$A\";
@@ -42,7 +54,8 @@ run_test "5 ::: Binary INTERSECT, COUNT BEDM" \
 	e = a,b INTERSECT a,b,c,d;
 	PRINT e;
 	COUNT e;" \
-	0
+	0 \
+	$VERBOSE
 
 run_test "6 ::: Unary INTERSECT, COUNT BEDN" \
 	"a = LOAD \"$A\";
@@ -52,7 +65,8 @@ run_test "6 ::: Unary INTERSECT, COUNT BEDN" \
 	e = INTERSECT a,b,c,d;
 	PRINT e;
 	COUNT e;" \
-	0
+	0 \
+	$VERBOSE
 
 run_test "7 ::: SUBTRACT" \
 	"a = LOAD \"$A\";
@@ -61,7 +75,8 @@ run_test "7 ::: SUBTRACT" \
 	e = a SUBTRACT b,c;
 	PRINT e;
 	COUNT e;" \
-	0
+	0 \
+	$VERBOSE
 
 run_test "8 ::: MERGEMAX" \
 	"a = LOAD \"$A\";
@@ -69,69 +84,111 @@ run_test "8 ::: MERGEMAX" \
 	e = MERGEMAX  a,b;
 	PRINT e;
 	COUNT e;" \
-	0
+	0 \
+	$VERBOSE
 
-run_test "9 ::: MERGEMAX, DISTANCE" \
+	run_test "9 ::: MERGEMAX, SCORE,SUM" \
 	"a = LOAD \"$A\";
 	b = LOAD \"$B\";
-	e = MERGEMAX a,b WHERE DISTANCE(10);
+	e = MERGEMAX a,b WHERE SCORE(SUM);
 	PRINT e;
 	COUNT e;" \
-	0
+	0 \
+	$VERBOSE
 
-run_test "10 ::: MERGEMAX, DISTANCE" \
+	run_test "10 ::: MERGEMAX, SCORE, MEDIAN" \
 	"a = LOAD \"$A\";
 	b = LOAD \"$B\";
-	e = MERGEMAX a,b WHERE DISTANCE(50);
+	e = MERGEMAX a,b WHERE SCORE(MEDIAN);
 	PRINT e;
 	COUNT e;" \
-	0
+	0 \
+	$VERBOSE
 
-run_test "11 ::: MERGEMAX, DISTANCE, SCORE, MIN" \
+run_test "11 ::: MERGEMAX, SCORE, MIN" \
 	"a = LOAD \"$A\";
 	b = LOAD \"$B\";
-	e = MERGEMAX a,b WHERE DISTANCE(50),SCORE(MIN);
+	e = MERGEMAX a,b WHERE SCORE(MIN);
 	PRINT e;
 	COUNT e;" \
-	0
+	0 \
+	$VERBOSE
 
-run_test "12 ::: MERGEMAX, DISTANCE, SCORE, MAX" \
+run_test "12 ::: MERGEMAX, SCORE, MAX" \
 	"a = LOAD \"$A\";
 	b = LOAD \"$B\";
 	c = LOAD \"$C\";
-	e = MERGEMAX a,b,c WHERE DISTANCE(50),SCORE(MAX);
+	e = MERGEMAX a,b,c WHERE SCORE(MAX);
 	PRINT e;
 	COUNT e;" \
-	0
+	0 \
+	$VERBOSE
 
-run_test "13 ::: MERGEMAX, DISTANCE, SCORE, SUM" \
+run_test "14 ::: MERGEMAX, SCORE, COUNT" \
 	"a = LOAD \"$A\";
 	b = LOAD \"$B\";
 	c = LOAD \"$C\";
-	e = MERGEMAX a,b,c WHERE DISTANCE(50),SCORE(SUM);
+	e = MERGEMAX a,b,c WHERE SCORE(COUNT);
 	PRINT e;" \
-	0
+	0 \
+	$VERBOSE
 
-run_test "14 ::: MERGEMAX, DISTANCE, SCORE, COUNT" \
+run_test "15 ::: MERGEMAX, NAME, SCORE, COUNT" \
 	"a = LOAD \"$A\";
 	b = LOAD \"$B\";
 	c = LOAD \"$C\";
-	e = MERGEMAX a,b,c WHERE DISTANCE(50),SCORE(COUNT);
+	e = MERGEMAX a,b,c WHERE NAME(COLLAPSE),SCORE(COUNT);
 	PRINT e;" \
-	0
+	0 \
+	$VERBOSE
 
-run_test "15 ::: MERGEMAX, DISTANCE, NAME, SCORE, COUNT" \
-	"a = LOAD \"$A\";
-	b = LOAD \"$B\";
-	c = LOAD \"$C\";
-	e = MERGEMAX a,b,c WHERE DISTANCE(50),NAME(COLLAPSE),SCORE(COUNT);
-	PRINT e;" \
-	0
-
-run_test "16 ::: MERGEFLAT, DISTANCE, NAME, SCORE, COUNT" \
+run_test "16 ::: MERGEFLAT, NAME, SCORE, COUNT" \
 	"a = LOAD \"$A\";
 	b = LOAD \"$B\";
 	c = LOAD \"$C\";
 	e = MERGEFLAT a,b,c WHERE NAME(COLLAPSE),SCORE(COUNT);
 	PRINT e;" \
-	0
+	0 \
+	$VERBOSE
+
+run_test "17 ::: MERGEMIN, NAME, SCORE, COUNT" \
+	"a = LOAD \"$A\";
+	b = LOAD \"$B\";
+	c = LOAD \"$C\";
+	e = MERGEMIN a,b,c WHERE NAME(COLLAPSE),SCORE(COUNT);
+	PRINT e;" \
+	0 \
+	$VERBOSE
+
+run_test "18 ::: LOAD dir, COUNT, PRINT"\
+	"a = LOAD \"$L\";
+	COUNT a;
+	PRINT a;" \
+	0 \
+	$VERBOSE
+
+run_test "19 ::: LOAD dir, Binary INTERSECT, PRINT, COUNT "\
+	"a = LOAD \"$L\";
+	 b = LOAD \"$B\";
+	 c = b INTERSECT a;
+	PRINT c;
+	COUNT c;" \
+	0 \
+	$VERBOSE
+
+run_test "20 ::: LOAD dir, Unary INTERSECT, PRINT" \
+	"a = LOAD \"$L\";
+	e = INTERSECT a;
+	PRINT e;
+	COUNT e;" \
+	0 \
+	$VERBOSE
+
+
+run_test "21 ::: MERGEMAX, SCORE,SUM" \
+	"a = LOAD \"$L\";
+	e = MERGEMAX a WHERE NAME(COLLAPSE),SCORE(SUM);
+	PRINT e;
+	COUNT e;" \
+	0 \
+	$VERBOSE
