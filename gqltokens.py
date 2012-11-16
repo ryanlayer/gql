@@ -6,6 +6,7 @@ reserved = (
 	'MERGEMAX',
 	'MERGEFLAT',
 	'MERGEMIN',
+	'FOREACH',
 	'LOAD',
 	'CAST',
 	'DISTANCE',
@@ -16,6 +17,10 @@ reserved = (
 	'WHERE',
 	'SCORE',
 	'NAME',
+	'CHROM',
+	'START',
+	'END',
+	'STRAND',
 	'MIN',
 	'SUM',
 	'MAX',
@@ -37,7 +42,14 @@ tokens = (
 		#'MINUS',		# -
 		#'TIMES',		# *
 		#'DIVIDE',		# /
-		#'EQUALEQUAL',	# ==
+		'AND',			# &
+		'OR',			# |
+		'EQUALEQUAL',	# ==
+		'LESSTHAN',		# <
+		'GREATERTHAN',	# >
+		'LESSTHANEQUAL',	# <=
+		'GREATERTHANEQUAL',	# >=
+		'NOTEQUAL',		# !=
 		'EQUAL',		# =
 		'COMMA',		# ,
 		'LPAREN',		# (
@@ -59,7 +71,7 @@ def t_newline(t):
 
 t_COMMA = r','
 #t_DIVIDE = r'/'
-#t_EQUALEQUAL = r'=='
+t_EQUALEQUAL = r'=='
 t_EQUAL = r'='
 t_SEMICOLON = r';'
 #t_COLON = r':'
@@ -68,6 +80,13 @@ t_SEMICOLON = r';'
 #t_TIMES = r'\*'
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
+t_AND = r'\&'
+t_OR = r'\|'
+t_LESSTHAN = r'\<'
+t_LESSTHANEQUAL = r'\<='
+t_GREATERTHAN = r'\>'
+t_GREATERTHANEQUAL = r'\>='
+t_NOTEQUAL = r'\!='
 
 
 def t_NUMBER(t):

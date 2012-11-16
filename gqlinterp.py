@@ -223,6 +223,81 @@ def eval_exp(exp, env):
 		return gqltools.merge_beds(merge_type,bedfiles, mods)
 	#}}}
 
+	#{{{ elif etype == 'foreach':
+	elif etype == 'foreach':
+		#print exp # Debug
+		#('foreach',
+		#	[	('identifier', 'a'),
+		#		('identifier', 'b'),
+		#		('identifier', 'c'),
+		#		('identifier', 'd')],
+		#	[   ('score', ('function', 'BOOL',
+		#			[   ('compare', ('<', ('number', 100.0))),
+		#				('conj', '&'),
+		#				('compare', ('>', ('number', 50.0))),
+		#				('conj', '&'),
+		#				('compare', ('!=', ('number', 75.0)))
+		#			])
+		#		),
+		#		('start', ('function', 'BOOL',
+		#			[   ('compare', ('>', ('number', 1000.0)))
+		#			])
+		#		),
+		#		('end', ('function', 'BOOL',
+		#			[   ('compare', ('<', ('number', 10000.0)))
+		#			])
+		#		),
+		#		('chrom', ('function', 'BOOL',
+		#			[ ('compare', ('==', ('string', 'chr1')))
+		#			])
+		#		)
+		#	]
+		#)
+
+		idents = exp[1]
+		modifiers = exp[2]
+		bedxs = []
+		for ident in idents:
+			bedx = eval_exp(ident, env)
+			bedxs = bedxs + [ bedx ]
+
+		mods = {}
+		for modifier in modifiers:
+			modifier_type = modifier[0]
+
+			if modifier_type in mods:
+				raise Exception('Multiple definitions of ' + \
+						modifier_type + '.')
+
+			function = eval_exp(modifier[1], env)
+			if function[0] != 'BOOL':
+				raise Exception('Unsupported function type in FOREACH: ' + \
+						function )
+			bool_funcs = []
+			for element in function[1]:
+				bool_func = []
+				if element[0] == 'compare':
+					op = element[1][0]
+					val = element[1][1]
+					if val[0] == 'number':
+						bool_func = [op, val[1]]
+					elif val[0] == 'string':
+						bool_func = [op, '"' + val[1] + '"']
+					else:
+						raise Exception('Unsupported value type in boolean ' +
+							'function in FOREACH.')
+				elif element[0] == 'conj':
+					conj = element[1][0]
+					bool_func = [conj]
+				else:
+					raise Exception('Error in boolean function in FOREACH.')
+				bool_funcs.append(bool_func)
+		
+			mods[modifier_type] = bool_funcs
+
+		return gqltools.foreach_bedx(bedxs, mods)
+	#}}}
+
 	#{{{ simple rules
 	elif etype == 'file':
 		#   ('file', ('string', 'file0'))
@@ -240,7 +315,10 @@ def eval_exp(exp, env):
 		return float(exp[1])
 
 	elif etype == 'function':
-		return exp[1]
+		if len(exp) == 2:
+			return exp[1]
+		else:
+			return exp[1:]
 
 	else:
 		print "ERROR: unknown expression type ",

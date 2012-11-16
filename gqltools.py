@@ -4,6 +4,7 @@ import gqltypes
 import pybedtools
 import random
 import sys
+import glob
 import os.path
 import os
 import linecache
@@ -178,60 +179,51 @@ def merge_bed_stack(out_stack):
 #}}}
 
 #{{{ def binary_intersect_beds(ordered_bed_list_A, ordered_bed_list_B):
-def binary_intersect_beds(ordered_bed_list_N, \
-						  label_list_N, \
-						  ordered_bed_list_M, \
-						  label_list_M):
-
-	allowed_types = ('BED3', 'BED6', 'BED12')
-
-	for bed in ordered_bed_list_N + ordered_bed_list_M:
-		if not ( bed.name in allowed_types ):
-			raise Exception('Type mismatch in INTERSECT. ' +
-					bed.name + ' not supported.')
-
+def binary_intersect_beds(_N_list, \
+						  _N_labels, \
+						  _M_list, \
+						  _M_labels):
 	pybedtools.settings.KEEP_TEMPFILES=True
 
-	NM_list = []
-	for N in ordered_bed_list_N:
-		N_bed = pybedtools.BedTool( N.val )
-		M_list = []
-		for M in ordered_bed_list_M:
-			M_bed = pybedtools.BedTool( M.val )
+	allowed_types = ('BED3', 'BED6', 'BED12','BEDL')
 
+
+	(N_list, N_label) = make_mixed_list_with_labels(_N_list, _N_labels, allowed_types)
+
+	(M_list, M_label) = make_mixed_list_with_labels(_M_list, _M_labels, allowed_types)
+
+
+	NM_matrix = []
+	for N in N_list:
+		N_bed = pybedtools.BedTool( N.val )
+		NM_list = []
+		for M in M_list:
+			M_bed = pybedtools.BedTool( M.val )
 			NM_bed = N_bed.intersect(b=M_bed,wo=True)
 			NM = gqltypes.BEDN(NM_bed.fn,True)
 			NM.types = [N.name,M.name]
-			#NM = {'val':NM_bed.fn, \
-					#'type':'BEDN', \
-					#'types':[N['type'],M['type']], \
-					#'tmp':True }
 			add_tmp_file(NM)
+			NM_list.append(NM)
+		NM_matrix.append(NM_list)
 
-			M_list.append(NM)
-		NM_list.append(M_list)
-
-	#return {'val':NM_list, \
-			#'labels':[label_list_N,label_list_M], \
-			#'type': 'BEDM'}
-	return gqltypes.BEDM(NM_list,[label_list_N,label_list_M])
+	return gqltypes.BEDM(NM_matrix,[N_label,M_label])
 #}}}
 	
 #{{{ def unary_intersect_beds(ordered_bed_list, bed_labels):
-def unary_intersect_beds(ordered_bed_list, bed_labels):
+def unary_intersect_beds(_N_list, _N_labels):
 
-	allowed_types = ('BED3', 'BED6', 'BED12')
+	allowed_types = ('BED3', 'BED6', 'BED12','BEDL')
 
-	bed_types = []
-	for bed in ordered_bed_list:
-		bed_types = bed_types + [ bed.name ]
-		if not ( bed.name in allowed_types ):
-			raise Exception('Type mismatch in INTERSECT. ' +
-					bed.name + ' not supported.')
+	(N_list, N_labels) = make_mixed_list_with_labels(_N_list, _N_labels, allowed_types)
+
+	N_types = []
+	for N in N_list:
+		N_types.append(N.name)
+
 	
 	pybedtools.settings.KEEP_TEMPFILES=True
 
-	bed_queue = deque(ordered_bed_list)
+	bed_queue = deque(N_list)
 	out_stack = []
 	while ( len(bed_queue) > 1 ):
 		A = bed_queue.popleft()
@@ -242,7 +234,6 @@ def unary_intersect_beds(ordered_bed_list, bed_labels):
 
 		#intersect the top two bed files in the stack
 		AB_bed = A_bed.intersect(b=B_bed,wo=True)
-		#AB = {'val':AB_bed.fn, 'type':'BEDN', 'tmp':True }
 		AB = gqltypes.BEDN(AB_bed.fn, True)
 
 		add_tmp_file(AB)
@@ -257,25 +248,26 @@ def unary_intersect_beds(ordered_bed_list, bed_labels):
 	#merge_bed_stack only sets val, type, and tmp fields
 	#must add labeles and types
 	R = merge_bed_stack(out_stack)
-	R.labels = bed_labels
-	R.types = bed_types
+	R.labels = N_labels
+	R.types = N_types
 
 	return R
 #}}}
 
-#{{{ def subtract_beds(ordered_bed_list):
-def subtract_beds(bed_file, ordered_bed_list):
+#{{{ def subtract_beds(bedx, _N_list):
+def subtract_beds(bedx, _N_list):
 
-	allowed_types = ('BED3', 'BED6', 'BED12')
+	allowed_types = ('BED3', 'BED6', 'BED12','BEDL')
 
-	for bed in [bed_file] + ordered_bed_list:
-		if not ( bed.name in allowed_types ):
-			raise Exception('Type mismatch in SUBTRACT. ' +
-					bed.name + ' not supported.')
-	
+	N_list = make_mixed_list(_N_list, allowed_types)
+
+	if not (bedx.name in ('BED3', 'BED6', 'BED12')):
+		raise Exception('Type mismatch in SUBTRACT. ' +
+				bed.name + ' not supported.')
+
 	pybedtools.settings.KEEP_TEMPFILES=True
 
-	bed_queue = deque([bed_file] + ordered_bed_list)
+	bed_queue = deque([bedx] + N_list)
 	while ( len(bed_queue) > 1 ):
 		A = bed_queue.popleft()
 		A_bed = pybedtools.BedTool( A.val )
@@ -284,7 +276,6 @@ def subtract_beds(bed_file, ordered_bed_list):
 		B_bed = pybedtools.BedTool( B.val )
 
 		AB_bed = A_bed.intersect(b=B_bed,v=True)
-		#AB = {'val':AB_bed.fn, 'type':A['type'], 'tmp':True }
 		AB = A.__class__(AB_bed.fn, True)
 
 		add_tmp_file(AB)
@@ -294,30 +285,18 @@ def subtract_beds(bed_file, ordered_bed_list):
 	return bed_queue.popleft()
 #}}}
 
-#{{{ def merge_beds(bed_list, merge_opts):
-def merge_beds(merge_type, bed_list, merge_opts):
+#{{{ def merge_beds(N_list, merge_opts):
+def merge_beds(merge_type, _N_list, merge_opts):
 	pybedtools.settings.KEEP_TEMPFILES=True
 
-	#{{{ parameter type checking
-	allowed_types = ('BED3', 'BED6', 'BED12')
+	allowed_types = ('BED3', 'BED6', 'BED12','BEDL')
 
-	for bed in bed_list:
-		if not ( bed.name in allowed_types ):
-			raise Exception('Type mismatch in MERGE. ' +
-					bed.name + ' not supported.')
-	
-	all_beds_match = True
-	for i in range(0,len(bed_list) - 1):
-		all_beds_match = all_beds_match and \
-			(bed_list[i]).name == (bed_list[i+1]).name
+	N_list = make_mixed_list(_N_list, allowed_types)
 
-	if not all_beds_match:
-		raise Exception('Type mismatch in MERGE. All inputs must be the ' + \
-				'same type.')
+	input_types = []
 
-	input_type = (bed_list[0]).__class__
-	#}}}
-	
+	for bed in N_list:
+		input_types.append(bed.name)
 
 	# Parse input arguments and add/modify default argumetns
 	# Default args
@@ -339,31 +318,31 @@ def merge_beds(merge_type, bed_list, merge_opts):
 						merge_opt + ' not supported.')
 
 		if merge_opt == 'score':
-			if input_type.__name__ in ['BED3'] :
-				raise Exception('Type mismatch in MERGE. Cannot aggregare ' + \
-						'scores with type:' + input_type.__name__)
-			elif not ( merge_opts[ merge_opt ] in score_functions ) :
+			if not ( merge_opts[ merge_opt ] in score_functions ) :
 				raise Exception('SCORE funciton not supported by MERGE. ' + \
 						merge_opts[ merge_opt ])
 			else:
 				kwargs[ valid_args[ merge_opt ] ] = \
 						score_functions[ merge_opts[ merge_opt ] ]
 		elif merge_opt == 'stranded':
-			if input_type.__name__ in ['BED3','BED4','BED5'] :
+			if ('BED3' in input_types ) or \
+				( 'BED4' in input_types) or \
+				( 'BED5' in input_types)  :
 				raise Exception('Type mismatch in MERGE. Cannot match by ' +
-					'strand with type:' + input_type.__name__)
+					'strand with givne input types')
 			kwargs[ valid_args[ merge_opt ] ] = True
 
 		elif (merge_opt == 'distance'):
-			if merge_type in ['flat','min']:
-				raise Exception('DISTANCE not supported for MERGE FLAT')
+			if merge_type == 'flat':
+				raise Exception('DISTANCE not supported for MERGEFLAT')
+			elif merge_type == 'min':
+				raise Exception('DISTANCE not supported for MERGEMIN')
+			elif merge_type == 'max':
+				raise Exception('DISTANCE not supported for MERGEMAX')
 			else:
 				kwargs[ valid_args[ merge_opt ] ] = merge_opts[ merge_opt ]
 
 		elif (merge_opt == 'name'):
-			if input_type.__name__ in ['BED3'] :
-				raise Exception('Type mismatch in MERGE. Cannot aggregare ' + \
-						'names with type:' + input_type.__name__)
 			if merge_opts[ merge_opt ] == 'COLLAPSE':
 				kwargs[ valid_args[ merge_opt ] ] = True
 			else :
@@ -378,14 +357,14 @@ def merge_beds(merge_type, bed_list, merge_opts):
 	# merge the file
 	merge_bed = pybedtools.BedTool()
 
-	if merge_type == 'max':
+	if merge_type == 'merge':
 		#{{{ combine files into one 
 		combo_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
 										 'merge_beds', \
 										 'tmp')
 
 		combo_file = open(combo_file_name, 'w')
-		for bed in bed_list:
+		for bed in N_list:
 			in_file = open(bed.val, 'r')
 			for line in in_file:
 				combo_file.write(line)
@@ -398,25 +377,30 @@ def merge_beds(merge_type, bed_list, merge_opts):
 
 		#}}}
 		merged_bed = sorted_bed.merge(**kwargs)
-	elif ( merge_type == 'flat' ) or (merge_type == 'min'):
+	elif  merge_type in ['flat','min','max'] :
 		#{{{ sort each file, make list of files
 		# make sure all the input files are sorted
 		sorted_beds = []
 		sorted_bed_files = []
-		for bed in bed_list:
+		for bed in N_list:
 			sorted_bed = pybedtools.BedTool(bed.val).sort()
-			add_tmp_file(input_type(sorted_bed.fn, True))
+			add_tmp_file( eval( 'gqltypes.'+ bed.name + \
+				'("' + sorted_bed.fn + '",True)' ) )
 			sorted_beds.append(sorted_bed)
 			sorted_bed_files.append(sorted_bed.fn)
 
 		kwargs['gql'] = True
-		kwargs['i'] = sorted_bed_files[1:]
+		kwargs['i'] = sorted_bed_files
 		#}}}
+		x = pybedtools.BedTool()
 		if merge_type == 'flat':
-			merged_bed = sorted_beds[0].multi_intersect(**kwargs)
+			merged_bed = x.multi_intersect(**kwargs)
 		elif merge_type == 'min':
 			kwargs['cluster'] = True
-			merged_bed = sorted_beds[0].multi_intersect(**kwargs)
+			merged_bed = x.multi_intersect(**kwargs)
+		elif merge_type == 'max':
+			kwargs['merge'] = True
+			merged_bed = x.multi_intersect(**kwargs)
 	else:
 		raise Exception('Supported by MERGE. ' + merge_type)
 	
@@ -425,6 +409,67 @@ def merge_beds(merge_type, bed_list, merge_opts):
 	add_tmp_file(result)
 
 	return result
+#}}}
+
+#{{{ def def foreach_bedx(_N_list, _opts):
+def foreach_bedx(_N_list, foreach_opts):
+	pybedtools.settings.KEEP_TEMPFILES=True
+
+	allowed_types = ('BED3', 'BED6', 'BED12','BEDL')
+
+	N_list = make_mixed_list(_N_list, allowed_types)
+
+	input_types = []
+
+	for bed in N_list:
+		input_types.append(bed.name)
+
+	output_type = ''
+	if 'BED3' in input_types:
+		output_type = gqltypes.source_type_map['BED3']
+	elif 'BED6' in input_types:
+		output_type = gqltypes.source_type_map['BED6']
+	elif 'BED12' in input_types:
+		output_type = gqltypes.source_type_map['BED12']
+	else:
+		raise Exception('Output type could not be determined in FOREACH.')
+
+	foreach_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
+									 'foreach_bedx', \
+									 'tmp')
+	foreach_bedx=output_type(foreach_file_name, True)
+	add_tmp_file(foreach_bedx)
+	foreach_file = open(foreach_bedx.val, 'w')
+	
+	for bed in N_list:
+		f = open(bed.val,'r')
+		bed_type =  gqltypes.source_type_map[bed.name]
+		for line in f:
+			cols = line.rstrip().split('\t')
+			keep_line = True
+			for opt in foreach_opts:
+				bool_string = ""
+				if not opt in  bed_type.col:
+					raise Exception('Invalid field for given filetype ' +
+							'in FOREACH. ' + opt + ' and ' + bed_type.name)
+				opt_col = bed_type.col[opt]
+
+				for test in foreach_opts[opt]:
+					if len(test)==2:
+						op=test[0]
+						val=test[1]
+						test=cols[opt_col]
+						if type(val) is str:
+							test='"'+str(test)+'"'
+						result = eval(str(test) + op + str(val))
+						bool_string = bool_string +str(result)
+					else:
+						bool_string = bool_string + test[0]
+				keep_line = keep_line &  eval(bool_string)
+			if keep_line:
+				foreach_file.write(line)
+
+	return foreach_bedx
 #}}}
 
 #{{{ def cast(bedx, new_type):
@@ -558,24 +603,31 @@ def mergemin_bedn(bednfile):
 #{{{ def print_bedx(ident):
 def print_bedx(bedx):
 
-	allowed_types = ['BED3', 'BED6', 'BED12', 'BEDN', 'BEDM']
+	allowed_types = ['BED3', 'BED6', 'BED12', 'BEDN', 'BEDM', 'BEDL']
 
 	if not ( bedx.name in allowed_types ):
 		raise Exception('Type mismatch in MEREGEMIN. ' +
 				bedx.name + ' not supported.')
 	
-
 	if bedx.name in ('BED3', 'BED6', 'BED12', 'BEDN'):
 		print_file(bedx.val)
 	elif bedx.name == 'BEDM':
 		for i in range (0, len( (bedx.labels)[0] ) ):
 			for j in range (0, len( (bedx.labels)[1] ) ):
-				print  bedx.labels[0][i] + "::" + bedx.labels[1][j]
-				print_file(bedx.val[i][j].val)
+				print  (bedx.labels)[0][i] + "::" + (bedx.labels)[1][j]
+				print_file( (bedx.val)[i][j].val)
+	elif bedx.name == 'BEDL':
+		for i in range (0, len( bedx.labels ) ):
+			print bedx.labels[i] 
+			print_file(bedx.val[i].val)
+
 #}}}
 
 #{{{ def print_file(fname):
 def print_file(fname):
+	if not os.path.isfile(fname):
+		raise Exception('File does not exist in PRINT: ' + fname)
+
 	f = open(fname, 'r')
 	for line in f:
 		print line,
@@ -584,63 +636,73 @@ def print_file(fname):
 
 #{{{ def save_file(ident, path):
 def save_file(ident, path):
+	allowed_types = ['BED3', 'BED6', 'BED12', 'BEDN']
+
+	if not ( ident.name in allowed_types ):
+		raise Exception('Type mismatch in SAVE. ' +
+				bed.name + ' not supported.')
+
 	shutil.copy(ident.val, path)
 #}}}
 
 #{{{ def load_file(file_path, filetype_name):
 def load_file(file_path, filetype_name):
 
-	# make sure file exists
-	if ( not os.path.isfile(file_path) ):
-		raise Exception ('file not found ' + file_path, 'load')
+	files = glob.glob(file_path)
 
-	f = open(file_path, 'r')
-	#trash the first line, unless there is only one line
-	line_1 = f.readline()
-	test_line = f.readline()
-	f.close()
+	if len(files) == 0:
+		raise Exception ('No file(s) not found at ' + file_path, 'load')
 
-	if test_line == '':
-		test_line = line_1 
+	return_files = []
+	return_labels = []
 
-	line_list = test_line.rstrip().split('\t')
+	for f in files:
+		if (filetype_name == 'auto') :
+			type_found = False
+			for source_type in gqltypes.source_types:
+				if source_type.test_filetype(f):
+					type_found = True
+					return_files.append(source_type(f, False))
+					return_labels.append(os.path.basename(f))
+			if not type_found:
+				raise Exception('Unknown filetype for:' + f)
+		else:
+			source_type = gqltypes.source_type_map[filetype_name]
+			if source_type.test_filetype(f):
+				return_files.append(source_type(f, False))
+				return_labels.append(f)
+			else:
+				raise Exception('Filetype mismatch:' + f + \
+						" does not appear to be " + filetype_name)
 
-	if (filetype_name == 'auto') :
-		for source_type in gqltypes.source_types:
-			if source_type.test_filetype(file_path):
-				return source_type(file_path, False)
-				#return {'val':file_path, 'type':source_type.name, 'tmp':False}
-
-		raise Exception('Unknown filetype :' + file_path)
-
-	source_type = gqltypes.source_type_map[filetype_name]
-	if source_type.test_filetype(file_path):
-		return source_type(file_path, False)
-		#return {'val':file_path, 'type':source_type.name, 'tmp':False}
+	if len(return_files) == 1:
+		return return_files[0]
 	else:
-		raise Exception('Filetype mismatch:' + file_path + \
-				" does not appear to be " + filetype_name)
+		return gqltypes.BEDL(return_files, return_labels)
 #}}}
 
-#{{{def count(bed):
-def count(bed):
-	allowed_types = ['BED3', 'BED6', 'BED12', 'BEDN', 'BEDM']
+#{{{def count(bedx):
+def count(bedx):
+	allowed_types = ['BED3', 'BED6', 'BED12', 'BEDN', 'BEDM', 'BEDL']
 
-	if not ( bed.name in allowed_types ):
-		raise Exception('Type mismatch in INTERSECT. ' +
-				bed.name + ' not supported.')
+	if not ( bedx.name in allowed_types ):
+		raise Exception('Type mismatch in COUNT. ' +
+				bedx.name + ' not supported.')
 
-
-	if bed.name == 'BEDM':
-		print "\t" + "\t".join( bed.labels[1] )
-		for i in range (0, len( (bed.labels)[0] ) ):
-			count_string = bed.labels[0][i]
-			for j in range (0, len( (bed.labels)[1] ) ):
+	if bedx.name == 'BEDM':
+		print "\t" + "\t".join( bedx.labels[1] )
+		for i in range (0, len( (bedx.labels)[0] ) ):
+			count_string = bedx.labels[0][i]
+			for j in range (0, len( (bedx.labels)[1] ) ):
 				count_string = count_string + '\t' + \
-					str(file_len(bed.val[i][j].val))
+					str(file_len(bedx.val[i][j].val))
 			print count_string
-	elif bed.name in ['BED3','BED6','BED12','BEDN']:
-		print str( file_len(bed.val) )
+	elif bedx.name in ['BED3','BED6','BED12','BEDN']:
+		print str( file_len(bedx.val) )
+	elif bedx.name == 'BEDL':
+		for i in range (0, len( bedx.labels ) ):
+			print bedx.labels[i] + "\t" + str(file_len(bedx.val[i].val))
+
 #}}}
 
 #{{{ def file_len(fname):
@@ -675,4 +737,46 @@ def bufcount(filename):
 		buf = read_f(buf_size)
 
 	return lines
+#}}}
+
+#{{{ def make_mixed_list_with_labels(_N_list, \
+def make_mixed_list_with_labels(_N_list, \
+								_N_labels,
+								allowed_types):
+
+	N_list = []
+	N_label = []
+	for i in range(0, len(_N_list)):
+		bedx = _N_list[i]
+		if not (bedx.name in allowed_types):
+			raise Exception('Type mismatch in INTERSECT. ' +
+					bedx.name + ' not supported.')
+		if bedx.name == 'BEDL':
+			for j in range(0, len(bedx.val)):
+				N_list.append(bedx.val[j])
+				N_label.append(bedx.labels[j])
+		else:
+			N_list.append(bedx)
+			N_label.append(_N_labels[i])
+
+	return (N_list, N_label)
+#}}}
+
+#{{{ def make_mixed_list_with_labels(_N_list, \
+def make_mixed_list(_N_list, \
+					allowed_types):
+
+	N_list = []
+	for i in range(0, len(_N_list)):
+		bedx = _N_list[i]
+		if not (bedx.name in allowed_types):
+			raise Exception('Type mismatch in INTERSECT. ' +
+					bedx.name + ' not supported.')
+		if bedx.name == 'BEDL':
+			for j in range(0, len(bedx.val)):
+				N_list.append(bedx.val[j])
+		else:
+			N_list.append(bedx)
+
+	return N_list
 #}}}

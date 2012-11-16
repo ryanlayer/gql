@@ -61,6 +61,10 @@ class SourceFile(object):
 #{{{class BED3(EnvElement,SourceFile):
 class BED3(EnvElement,SourceFile):
 	name = 'BED3'
+	col = {'chrom':0,
+		   'start':1,
+		   'end':2,
+	}
 	# each entry represents a column
 	file_format = [ chr_re, #chrom
 					one_digit_re, #start
@@ -73,6 +77,13 @@ class BED3(EnvElement,SourceFile):
 #{{{ class BED6(EnvElement,SourceFile):
 class BED6(EnvElement,SourceFile):
 	name = 'BED6'
+	col = {'chrom':0,
+		   'start':1,
+		   'end':2,
+		   'name':3,
+		   'score':4,
+		   'strand':5,
+	}
 	file_format = [ chr_re,		#chrom
 					one_digit_re,	#start
 					one_digit_re,	#end
@@ -87,6 +98,19 @@ class BED6(EnvElement,SourceFile):
 #{{{ class BED12(EnvElement,SourceFile):
 class BED12(EnvElement,SourceFile):
 	name = 'BED12'
+	col = {'chrom':0,
+		   'start':1,
+		   'end':2,
+		   'name':3,
+		   'score':4,
+		   'strand':5,
+		   'thickStart':6,
+		   'thickEnd':7,
+		   'itemRgb':8,
+		   'blockCount':9,
+		   'blockSizes':10,
+		   'blockStarts':11,
+	}
 	file_format = [ chr_re,		#chrom
 					one_digit_re,	#start
 					one_digit_re,	#end
@@ -136,6 +160,16 @@ class BEDM(EnvElement):
 	name = 'BEDM'
 	def __init__(self,val,labels):
 		self.val = val
+		self.labels = labels
+#}}}
+
+#{{{ class BEDL(EnvElement):
+class BEDL(EnvElement):
+	name = 'BEDL'
+	def __init__(self,val,labels):
+		# list of bedx 
+		self.val = val
+		# names of bedx
 		self.labels = labels
 #}}}
 

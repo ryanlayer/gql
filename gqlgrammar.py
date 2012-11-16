@@ -63,7 +63,6 @@ def p_number_number(p):
 	'number : NUMBER'
 	p[0] = ("number",p[1])
 
-
 def p_exp_string(p):
 	'exp : STRING'
 	p[0] = ("string",p[1])
@@ -99,6 +98,10 @@ def p_exp_load(p):
 #	'exp : LOAD file AS filetype'
 #	p[0] = ("load", p[2], p[3])
 
+def p_exp_foreach(p):
+	'exp : FOREACH idents optmods'
+	p[0] = ("foreach", p[2], p[3])
+
 def p_exp_binary_intersect(p):
 	'exp : idents INTERSECT idents'
 	p[0] = ("binary-intersect",  p[1], p[3] )
@@ -111,17 +114,15 @@ def p_exp_subtract(p):
 	'exp : ident SUBTRACT idents'
 	p[0] = ("subtract",  p[1], p[3] )
 
-def p_exp_merge_min(p):
-	'exp : MERGEMIN idents optmods'
-	p[0] = ("merge", "min",  p[2], p[3] )
+def p_exp_merges(p):
+	'exp : merge idents optmods'
+	p[0] = ("merge", p[1],  p[2], p[3] )
 
-def p_exp_merge_flat(p):
-	'exp : MERGEFLAT idents optmods'
-	p[0] = ("merge", "flat",  p[2], p[3] )
-
-def p_exp_merge_max(p):
-	'exp : MERGEMAX idents optmods'
-	p[0] = ("merge", "max", p[2], p[3] )
+def p_exp_merge(p):
+	'''merge : MERGEMIN
+		| MERGEFLAT
+		| MERGEMAX'''
+	p[0] = (p[1])[5:].lower()
 
 def p_exp_CAST(p):
 	'exp : CAST ident AS filetype optmods'
@@ -144,23 +145,14 @@ def p_exp_mods_one(p):
 	p[0] = [ p[1] ]
 
 def p_exp_mod(p):
-	'''mod : distance
-		| score
-		| name'''
-	p[0] =  p[1]
-
-def p_name(p):
-	'name : NAME LPAREN function RPAREN'
-	p[0] = ("name", p[3])
-
-
-def p_distance(p):
-	'distance : DISTANCE LPAREN number RPAREN'
-	p[0] = ("distance", p[3])
-
-def p_score(p):
-	'score : SCORE LPAREN function RPAREN'
-	p[0] = ("score", p[3])
+	'''mod : NAME LPAREN function RPAREN
+		| DISTANCE LPAREN number RPAREN
+		| CHROM LPAREN function RPAREN
+		| START LPAREN function RPAREN
+		| END LPAREN function RPAREN
+		| STRAND LPAREN function RPAREN
+		| SCORE LPAREN function RPAREN'''
+	p[0] =  (p[1].lower(), p[3])
 
 def p_function(p):
 	'''function : MIN
@@ -175,18 +167,39 @@ def p_function(p):
 			| STDEV'''
 	p[0] = ("function", p[1])
 
-#def p_optidents(p):
-#	'optidents : idents'
-#	p[0] = p[1]
-#
-#def p_optidents_empty(p):
-#	'optidents : '
-#	p[0] = []
+def p_function_bool(p):
+	'function : boolexps'
+	p[0] = ("function", 'BOOL', p[1])
+
+def p_boolexps(p):
+	'boolexps : boolexp conj boolexps'
+	p[0] = [p[1],p[2]] + p[3]
+
+def p_boolexps_one(p):
+	'boolexps : boolexp'
+	p[0] = [p[1]]
+
+def p_boolexp(p):
+	'boolexp : compare exp'
+	p[0] = ("compare", (p[1], p[2]))
+
+def p_bool_compare(p):
+	'''compare : EQUALEQUAL
+		| LESSTHAN
+		| GREATERTHAN
+		| LESSTHANEQUAL
+		| GREATERTHANEQUAL
+		| NOTEQUAL'''
+	p[0] = p[1]
+
+def p_bool_conj(p):
+	'''conj : AND
+		| OR'''
+	p[0] = ("conj", p[1])
 
 def p_idents(p):
 	'idents : ident COMMA idents'
 	p[0] = [p[1]] + p[3]
-
 
 def p_idents_one(p):
 	'idents : ident'
