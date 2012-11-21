@@ -2,17 +2,19 @@ import ply.lex as lex
 
 reserved = (
 	'INTERSECT',
+	'JACCARD',
 	'SUBTRACT',
 	'MERGEMAX',
 	'MERGEFLAT',
 	'MERGEMIN',
-	'FOREACH',
+	'FILTER',
 	'LOAD',
 	'CAST',
 	'DISTANCE',
 	'PRINT',
 	'SAVE',
 	'COUNT',
+	'PEAK',
 	'AS',
 	'WHERE',
 	'SCORE',
@@ -32,6 +34,7 @@ reserved = (
 	'STDEV',
 	'GENOME',
 	'BED3',
+	'BED4',
 	'BED6',
 	'BED12',
 )

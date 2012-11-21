@@ -1,5 +1,6 @@
 import os.path
 import gqltools
+import gqltypes
 import sys
 
 #{{{ def env_lookup|update|debug
@@ -52,7 +53,14 @@ def eval_stmt(stmt, env):
 	elif stype == 'print':
 		#('print', ('identifier', 'c'))
 		ident = eval_exp(stmt[1],env)
-		gqltools.print_bedx(ident)
+		gqltools.print_val(ident,-1)
+	#}}}
+
+	#{{{elif stype == 'peak':
+	elif stype == 'peak':
+		ident = eval_exp(stmt[1],env)
+		num = stmt[2]
+		gqltools.print_val(ident,num)
 	#}}}
 
 	#{{{elif stype == 'save':
@@ -61,14 +69,6 @@ def eval_stmt(stmt, env):
 		ident = eval_exp(stmt[1],env)
 		file_path = eval_exp(stmt[2], env)
 		gqltools.save_file(ident, file_path)
-	#}}}
-
-	#{{{elif stype == 'count':
-	elif stype == 'count':
-		#print stmt
-		#('count', ('identifier', 'e'))
-		ident = eval_exp(stmt[1],env)
-		gqltools.count(ident)
 	#}}}
 #}}}
 
@@ -108,6 +108,7 @@ def eval_exp(exp, env):
 
 	#{{{ if etype == 'cast':
 	if etype == 'cast':
+		#print exp
 		#('cast', ('identifier', 'a'), ('filetype', 'BED6'), [])
 		ident = exp[1]
 		bedx = eval_exp(ident, env)
@@ -149,6 +150,39 @@ def eval_exp(exp, env):
 
 	#}}}
 
+	#{{{ elif etype == 'binary-jaccard':
+	elif etype == 'binary-jaccard':
+		#print exp
+		#('binary-intersect', 
+		#	[('identifier', 'a')], 
+		#	[('identifier', 'b'), ('identifier', 'c'), ('identifier', 'd')])
+		idents = exp[1]
+		n_bedfiles = []
+		for ident in idents:
+			bedx = eval_exp(ident, env)
+			n_bedfiles = n_bedfiles + [ bedx ]
+
+		n_labels = []
+		for ident in idents:
+			n_labels = n_labels + [ident[1]]
+
+		idents = exp[2]
+		m_bedfiles = []
+		for ident in idents:
+			bedx = eval_exp(ident, env)
+			m_bedfiles = m_bedfiles + [ bedx ]
+
+		m_labels = []
+		for ident in idents:
+			m_labels = m_labels + [ident[1]]
+
+		return gqltools.binary_jaccard_beds(n_bedfiles, \
+											  n_labels, \
+											  m_bedfiles, \
+											  m_labels)
+
+	#}}}
+
 	#{{{ elif etype == 'unary-intersect':
 	elif etype == 'unary-intersect':
 		# ('intersect',
@@ -182,7 +216,7 @@ def eval_exp(exp, env):
 
 	#{{{ elif etype == 'mergemin':
 	elif etype == 'mergemin':
-		print exp
+		#print exp
 		ident_list = exp[1]
 		if len(ident_list) == 1:
 			bednfile = eval_exp(ident, env)
@@ -223,10 +257,10 @@ def eval_exp(exp, env):
 		return gqltools.merge_beds(merge_type,bedfiles, mods)
 	#}}}
 
-	#{{{ elif etype == 'foreach':
-	elif etype == 'foreach':
+	#{{{ elif etype == 'filter':
+	elif etype == 'filter':
 		#print exp # Debug
-		#('foreach',
+		#('filter',
 		#	[	('identifier', 'a'),
 		#		('identifier', 'b'),
 		#		('identifier', 'c'),
@@ -295,7 +329,16 @@ def eval_exp(exp, env):
 		
 			mods[modifier_type] = bool_funcs
 
-		return gqltools.foreach_bedx(bedxs, mods)
+		return gqltools.filter_bedx(bedxs, mods)
+	#}}}
+
+	#{{{elif etype == 'count':
+	elif etype == 'count':
+			
+		ident= eval_exp(exp[1], env)
+
+		return gqltools.count(ident)
+
 	#}}}
 
 	#{{{ simple rules
@@ -305,7 +348,7 @@ def eval_exp(exp, env):
 
 	elif etype == 'filetype':
 		#	('filetype', 'GENOME'))
-		return exp[1]
+		return gqltypes.source_type_map[exp[1]]
 
 	elif etype == "string":
 		#   ('string', 'file0')

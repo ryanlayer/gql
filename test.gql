@@ -2,14 +2,33 @@
 
 #g = LOAD "data/human.hg18.genome" AS GENOME;
 
-a = LOAD "data/a.bed" AS BED6;
-b = LOAD "data/b.bed" AS BED6;
-c = LOAD "data/c.bed" AS BED6;
-d = LOAD "data/d.bed";
+a = LOAD "data/a.bed";
+b = LOAD "data/b.bed";
+c = LOAD "data/c.bed";
+d = LOAD "data/bed3.bed";
 
-e = MERGEMAX a,b,c,d WHERE SCORE(SUM);
+l = LOAD "data/tiny*bed";
 
+e = COUNT l;
 PRINT e;
+
+
+#e = MERGEMAX a,b,c,d WHERE SCORE(==100);
+#e = FOREACH a,b,c,d WHERE SCORE(<100&>50&!=75),START(>1000),END(<10000),CHROM(=="chr1");
+#e = FILTER a,b,c,d WHERE CHROM(=="chr1");
+#PEAK e 10;
+#e = FILTER a,b,c,d WHERE SCORE(<5);
+#e = FOREACH a,b,c,d;
+#e = FOREACH a,b,c,d WHERE SCORE(MIN);
+
+#e = MERGEMAX a,b,c,d WHERE SCORE(SUM);
+#COUNT e ;
+#e = MERGEMIN a,b,c,d WHERE SCORE(SUM);
+#COUNT e ;
+#e = MERGEFLAT a,b,c,d WHERE SCORE(SUM);
+#COUNT e ;
+
+#PRINT e;
 
 # test intersect
 #e = INTERSECT a,b,c,d;

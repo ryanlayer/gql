@@ -53,14 +53,14 @@ def get_intersect_result(bed_pair):
 									 'unary_intersect_beds', \
 									 'tmp')
 
-	offset = 0
+	offset = A.cols
 
-	if A.name == 'BED3':
-		offset = 3
-	elif A.name == 'BED6':
-		offset = 6
-	if A.name == 'BED12':
-		offset = 12 
+#	if A.name == 'BED3':
+#		offset = 3
+#	elif A.name == 'BED6':
+#		offset = 6
+#	if A.name == 'BED12':
+#		offset = 12 
 
 	curr_line = 1
 
@@ -86,7 +86,6 @@ def get_intersect_result(bed_pair):
 	in_file.close()
 	out_file.close()
 
-	#R = {'val':R_file_name, 'type':'BED6', 'tmp':True }
 	R = gqltypes.BED6(R_file_name, True)
 
 	add_tmp_file(R)
@@ -170,7 +169,6 @@ def merge_bed_stack(out_stack):
 
 	out_file.close()
 
-	#R = {'val':R_file_name, 'type':'BEDN', 'tmp':True }
 	R = gqltypes.BEDN(R_file_name, True)
 
 	add_tmp_file(R)
@@ -185,13 +183,16 @@ def binary_intersect_beds(_N_list, \
 						  _M_labels):
 	pybedtools.settings.KEEP_TEMPFILES=True
 
-	allowed_types = ('BED3', 'BED6', 'BED12','BEDL')
+	allowed_types = gqltypes.bed_types
 
 
-	(N_list, N_label) = make_mixed_list_with_labels(_N_list, _N_labels, allowed_types)
+	(N_list, N_label) = make_mixed_list_with_labels(_N_list, \
+													_N_labels, \
+													allowed_types)
 
-	(M_list, M_label) = make_mixed_list_with_labels(_M_list, _M_labels, allowed_types)
-
+	(M_list, M_label) = make_mixed_list_with_labels(_M_list, \
+													_M_labels, \
+													allowed_types)
 
 	NM_matrix = []
 	for N in N_list:
@@ -199,7 +200,11 @@ def binary_intersect_beds(_N_list, \
 		NM_list = []
 		for M in M_list:
 			M_bed = pybedtools.BedTool( M.val )
-			NM_bed = N_bed.intersect(b=M_bed,wo=True)
+			try:
+				NM_bed = N_bed.intersect(b=M_bed,wo=True)
+			except pybedtools.helpers.BEDToolsError as e:
+				raise Exception('Error in INTERSECT. ' + e.msg )
+
 			NM = gqltypes.BEDN(NM_bed.fn,True)
 			NM.types = [N.name,M.name]
 			add_tmp_file(NM)
@@ -208,20 +213,57 @@ def binary_intersect_beds(_N_list, \
 
 	return gqltypes.BEDM(NM_matrix,[N_label,M_label])
 #}}}
+
+#{{{ def binary_jaccard_beds(ordered_bed_list_A, ordered_bed_list_B):
+def binary_jaccard_beds(_N_list, \
+						  _N_labels, \
+						  _M_list, \
+						  _M_labels):
+	pybedtools.settings.KEEP_TEMPFILES=True
+
+	allowed_types = gqltypes.bed_types
+
+	(N_list, N_label) = make_mixed_list_with_labels(_N_list, \
+													_N_labels, \
+													allowed_types)
+
+	(M_list, M_label) = make_mixed_list_with_labels(_M_list, \
+													_M_labels, \
+													allowed_types)
+
+	num_matrix = []
+	label_matrix = []
+	for N in N_list:
+		N_bed = pybedtools.BedTool( N.val )
+		num_list = []
+		for M in M_list:
+			M_bed = pybedtools.BedTool( M.val )
+			try:
+				r = N_bed.jaccard(b=M_bed)
+			except pybedtools.helpers.BEDToolsError as e:
+				raise Exception('Error in JACCARD. ' + e.msg )
+
+			num = gqltypes.NUM(r['jaccard'])
+			num_list.append(num)
+		num_matrix.append(num_list)
+
+	return gqltypes.NUMMATRIX(num_matrix,[N_label,M_label])
+#}}}
 	
 #{{{ def unary_intersect_beds(ordered_bed_list, bed_labels):
 def unary_intersect_beds(_N_list, _N_labels):
+	pybedtools.settings.KEEP_TEMPFILES=True
 
-	allowed_types = ('BED3', 'BED6', 'BED12','BEDL')
+	allowed_types = gqltypes.bed_types
 
-	(N_list, N_labels) = make_mixed_list_with_labels(_N_list, _N_labels, allowed_types)
+	(N_list, N_labels) = make_mixed_list_with_labels(_N_list,
+													 _N_labels,
+													 allowed_types)
 
 	N_types = []
 	for N in N_list:
-		N_types.append(N.name)
-
+		N_types.append(type(N))
 	
-	pybedtools.settings.KEEP_TEMPFILES=True
 
 	bed_queue = deque(N_list)
 	out_stack = []
@@ -233,7 +275,11 @@ def unary_intersect_beds(_N_list, _N_labels):
 		B_bed = pybedtools.BedTool( B.val )
 
 		#intersect the top two bed files in the stack
-		AB_bed = A_bed.intersect(b=B_bed,wo=True)
+		try:
+			AB_bed = A_bed.intersect(b=B_bed,wo=True)
+		except pybedtools.helpers.BEDToolsError as e:
+			raise Exception('Error in INTERSECT. ' + e.msg )
+
 		AB = gqltypes.BEDN(AB_bed.fn, True)
 
 		add_tmp_file(AB)
@@ -256,28 +302,31 @@ def unary_intersect_beds(_N_list, _N_labels):
 
 #{{{ def subtract_beds(bedx, _N_list):
 def subtract_beds(bedx, _N_list):
+	pybedtools.settings.KEEP_TEMPFILES=True
 
-	allowed_types = ('BED3', 'BED6', 'BED12','BEDL')
+	allowed_types = gqltypes.bed_types
 
 	N_list = make_mixed_list(_N_list, allowed_types)
 
-	if not (bedx.name in ('BED3', 'BED6', 'BED12')):
-		raise Exception('Type mismatch in SUBTRACT. ' +
-				bed.name + ' not supported.')
-
-	pybedtools.settings.KEEP_TEMPFILES=True
+	if not (type(bedx) in gqltypes.flat_bed_types):
+		raise Exception('Type mismatch in SUBTRACT. ' + \
+				bedx.name + ' not supported.')
 
 	bed_queue = deque([bedx] + N_list)
 	while ( len(bed_queue) > 1 ):
+		pybedtools.settings.KEEP_TEMPFILES=True
 		A = bed_queue.popleft()
 		A_bed = pybedtools.BedTool( A.val )
 
 		B = bed_queue.popleft()
 		B_bed = pybedtools.BedTool( B.val )
 
-		AB_bed = A_bed.intersect(b=B_bed,v=True)
-		AB = A.__class__(AB_bed.fn, True)
+		try:
+			AB_bed = A_bed.subtract(b=B_bed,A=True)
+		except pybedtools.helpers.BEDToolsError as e:
+			raise Exception('Error in SUBTRACT. ' +  e.msg )
 
+		AB = A.__class__(AB_bed.fn, True)
 		add_tmp_file(AB)
 
 		bed_queue.appendleft(AB)
@@ -289,14 +338,14 @@ def subtract_beds(bedx, _N_list):
 def merge_beds(merge_type, _N_list, merge_opts):
 	pybedtools.settings.KEEP_TEMPFILES=True
 
-	allowed_types = ('BED3', 'BED6', 'BED12','BEDL')
+	allowed_types = gqltypes.bed_types
 
 	N_list = make_mixed_list(_N_list, allowed_types)
 
 	input_types = []
 
 	for bed in N_list:
-		input_types.append(bed.name)
+		input_types.append(type(bed))
 
 	# Parse input arguments and add/modify default argumetns
 	# Default args
@@ -325,9 +374,9 @@ def merge_beds(merge_type, _N_list, merge_opts):
 				kwargs[ valid_args[ merge_opt ] ] = \
 						score_functions[ merge_opts[ merge_opt ] ]
 		elif merge_opt == 'stranded':
-			if ('BED3' in input_types ) or \
-				( 'BED4' in input_types) or \
-				( 'BED5' in input_types)  :
+			if (gqltypes.BED3 in input_types ) or \
+				( gqltypes.BED4 in input_types) or \
+				( gqltypes.BED5 in input_types)  :
 				raise Exception('Type mismatch in MERGE. Cannot match by ' +
 					'strand with givne input types')
 			kwargs[ valid_args[ merge_opt ] ] = True
@@ -394,13 +443,22 @@ def merge_beds(merge_type, _N_list, merge_opts):
 		#}}}
 		x = pybedtools.BedTool()
 		if merge_type == 'flat':
-			merged_bed = x.multi_intersect(**kwargs)
+			try:
+				merged_bed = x.multi_intersect(**kwargs)
+			except pybedtools.helpers.BEDToolsError as e:
+				raise Exception('Error in MERGE. ' +  e.msg )
 		elif merge_type == 'min':
 			kwargs['cluster'] = True
-			merged_bed = x.multi_intersect(**kwargs)
+			try:
+				merged_bed = x.multi_intersect(**kwargs)
+			except pybedtools.helpers.BEDToolsError as e:
+				raise Exception('Error in MERGE. ' +  e.msg )
 		elif merge_type == 'max':
 			kwargs['merge'] = True
-			merged_bed = x.multi_intersect(**kwargs)
+			try:
+				merged_bed = x.multi_intersect(**kwargs)
+			except pybedtools.helpers.BEDToolsError as e:
+				raise Exception('Error in MERGE. ' +  e.msg )
 	else:
 		raise Exception('Supported by MERGE. ' + merge_type)
 	
@@ -411,35 +469,37 @@ def merge_beds(merge_type, _N_list, merge_opts):
 	return result
 #}}}
 
-#{{{ def def foreach_bedx(_N_list, _opts):
-def foreach_bedx(_N_list, foreach_opts):
+#{{{ def def filter_bedx(_N_list, _opts):
+def filter_bedx(_N_list, filter_opts):
 	pybedtools.settings.KEEP_TEMPFILES=True
 
-	allowed_types = ('BED3', 'BED6', 'BED12','BEDL')
+	allowed_types = gqltypes.bed_types
 
 	N_list = make_mixed_list(_N_list, allowed_types)
 
 	input_types = []
 
 	for bed in N_list:
-		input_types.append(bed.name)
+		input_types.append(type(bed))
 
 	output_type = ''
-	if 'BED3' in input_types:
-		output_type = gqltypes.source_type_map['BED3']
-	elif 'BED6' in input_types:
-		output_type = gqltypes.source_type_map['BED6']
-	elif 'BED12' in input_types:
-		output_type = gqltypes.source_type_map['BED12']
+	if gqltypes.BED3 in input_types:
+		output_type = gqltypes.BED3
+	elif gqltypes.BED4 in input_types:
+		output_type = gqltypes.BED4
+	elif gqltypes.BED6 in input_types:
+		output_type = gqltypes.BED6
+	elif gqltypes.BED12 in input_types:
+		output_type = gqltypes.BED12
 	else:
 		raise Exception('Output type could not be determined in FOREACH.')
 
-	foreach_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
-									 'foreach_bedx', \
+	filter_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
+									 'filter_bedx', \
 									 'tmp')
-	foreach_bedx=output_type(foreach_file_name, True)
-	add_tmp_file(foreach_bedx)
-	foreach_file = open(foreach_bedx.val, 'w')
+	filter_bedx=output_type(filter_file_name, True)
+	add_tmp_file(filter_bedx)
+	filter_file = open(filter_bedx.val, 'w')
 	
 	for bed in N_list:
 		f = open(bed.val,'r')
@@ -447,14 +507,14 @@ def foreach_bedx(_N_list, foreach_opts):
 		for line in f:
 			cols = line.rstrip().split('\t')
 			keep_line = True
-			for opt in foreach_opts:
+			for opt in filter_opts:
 				bool_string = ""
 				if not opt in  bed_type.col:
 					raise Exception('Invalid field for given filetype ' +
 							'in FOREACH. ' + opt + ' and ' + bed_type.name)
 				opt_col = bed_type.col[opt]
 
-				for test in foreach_opts[opt]:
+				for test in filter_opts[opt]:
 					if len(test)==2:
 						op=test[0]
 						val=test[1]
@@ -467,47 +527,63 @@ def foreach_bedx(_N_list, foreach_opts):
 						bool_string = bool_string + test[0]
 				keep_line = keep_line &  eval(bool_string)
 			if keep_line:
-				foreach_file.write(line)
+				filter_file.write(line)
 
-	return foreach_bedx
+	return filter_bedx
 #}}}
 
 #{{{ def cast(bedx, new_type):
 def cast(bedx, new_type):
 
-	allowed_types = ('BED3', 'BED6', 'BED12')
+	allowed_types = gqltypes.flat_bed_types
 
-	if not bedx.name in allowed_types:
+	if not type(bedx) in allowed_types:
 		raise Exception('Type mismatch in CAST. ' +
 					bedx.name + ' not supported.')
 
-	if bedx.name == 'BED12' and not new_type in ['BED3', 'BED6', 'BED12']:
+	if type(bedx) == gqltypes.BED12 and  \
+				not new_type in \
+				(gqltypes.BED3,gqltypes.BED4,gqltypes.BED6,gqltypes.BED12):
 		raise Exception ('Type mismatch in CAST. Cannot cast from ' + \
-				bedx.name + ' to ' + new_type)
-	elif bedx.name == 'BED6' and not new_type in ['BED3', 'BED6']:
+				bedx.name + ' to ' + new_type.name)
+
+	elif type(bedx) == gqltypes.BED6 and \
+				not new_type in \
+				(gqltypes.BED3,gqltypes.BED4,gqltypes.BED6):
 		raise Exception ('Type mismatch in CAST. Cannot cast from ' + \
-				bedx.name + ' to ' + new_type)
-	elif bedx.name == 'BED3' and not new_type in ['BED3']:
+				bedx.name + ' to ' + new_type.name)
+
+	elif type(bedx) == gqltypes.BED4 and \
+				not new_type in \
+				(gqltypes.BED3,gqltypes.BED4):
 		raise Exception ('Type mismatch in CAST. Cannot cast from ' + \
-				bedx.name + ' to ' + new_type)
+				bedx.name + ' to ' + new_type.name)
+
+	elif type(bedx) == gqltypes.BED3 and \
+				not new_type  in \
+				(gqltypes.BED3,gqltypes.BED3):
+		raise Exception ('Type mismatch in CAST. Cannot cast from ' + \
+				bedx.name + ' to ' + new_type.name)
 
 	start_range = 0
-	end_range = 1
+	end_range = new_type.cols
 
-	if new_type == 'BED12':
-		end_range = 13
-	elif new_type == 'BED6':
-		end_range = 6 
-	elif new_type == 'BED3':
-		end_range = 3 
+#	if new_type == 'BED12':
+#		end_range = 13
+#	elif new_type == 'BED6':
+#		end_range = 6 
+#	elif new_type == 'BED4':
+#		end_range = 4 
+#	elif new_type == 'BED3':
+#		end_range = 3 
 
 	new_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
 									 'cast', \
 									 'tmp')
 
-	new_class = gsltypes.source_type_map(new_type)
+	#new_class = gqltypes.source_type_map[new_type]
 
-	new_file = new_class(new_file_name, True)
+	new_file = new_type(new_file_name, True)
 	add_tmp_file(new_file)
 
 	in_file = open(bedx.val, 'r')
@@ -524,9 +600,9 @@ def cast(bedx, new_type):
 #{{{ def mergemin_bedn(bednfile):
 def mergemin_bedn(bednfile):
 
-	allowed_types = ('BEDN')
+	allowed_types = gqltypes.BEDN
 
-	if not ( bednfile.name in allowed_types ):
+	if not ( type(bednfile) in allowed_types ):
 		raise Exception('Type mismatch in MEREGEMIN. ' +
 				bednfile.name + ' not supported.')
 	
@@ -544,18 +620,23 @@ def mergemin_bedn(bednfile):
 	for bed_type in bed_types:
 		o_starts.append(curr_offset + 1)
 		o_ends.append(curr_offset + 2)
-		if bed_type != 'BED3':
+		if bed_type in (gql_types.BED6, gql_types.BED12):
 			o_names.append(curr_offset + 3)
 			o_scores.append(curr_offset + 4)
 			o_strands.append(curr_offset + 5)
+		if bed_type == gql_types.BED4:
+			o_names.append(curr_offset + 3)
 
-		if bed_type == 'BED3':
-			curr_offset += 3
-		elif bed_type == 'BED6':
-			curr_offset += 6
-		elif bed_type == 'BED12':
-			curr_offset += 12 
-
+		curr_offset += bed_type.cols
+#		if bed_type == 'BED3':
+#			curr_offset += 3
+#		elif bed_type == 'BED4':
+#			curr_offset += 4
+#		elif bed_type == 'BED6':
+#			curr_offset += 6
+#		elif bed_type == 'BED12':
+#			curr_offset += 12 
+#
 	
 
 	R_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
@@ -587,58 +668,55 @@ def mergemin_bedn(bednfile):
 	in_file.close()
 	out_file.close()
 
-	new_type = 'BED6'
+	new_type = gqltypes.BED6
 	if len(o_names) == 0 :
-		new_type = 'BED3'
+		new_type = gqltypes.BED3
 
-	new_class = gsltypes.source_type_map(new_type)
+	#new_class = gsltypes.source_type_map(new_type)
 
-	R = new_class(R_file_name, True)
+	R = new_type(R_file_name, True)
 
 	add_tmp_file(R)
 
 	return R
 #}}}
 
-#{{{ def print_bedx(ident):
-def print_bedx(bedx):
+#{{{ def print_val(ident, num):
+def print_val(ident, num):
 
-	allowed_types = ['BED3', 'BED6', 'BED12', 'BEDN', 'BEDM', 'BEDL']
+	allowed_types = gqltypes.printable_types
 
-	if not ( bedx.name in allowed_types ):
-		raise Exception('Type mismatch in MEREGEMIN. ' +
-				bedx.name + ' not supported.')
+	if not ( type(ident) in allowed_types ):
+		raise Exception('Type mismatch in PRINT. ' +\
+				ident.name + ' not supported.')
 	
-	if bedx.name in ('BED3', 'BED6', 'BED12', 'BEDN'):
-		print_file(bedx.val)
-	elif bedx.name == 'BEDM':
-		for i in range (0, len( (bedx.labels)[0] ) ):
-			for j in range (0, len( (bedx.labels)[1] ) ):
-				print  (bedx.labels)[0][i] + "::" + (bedx.labels)[1][j]
-				print_file( (bedx.val)[i][j].val)
-	elif bedx.name == 'BEDL':
-		for i in range (0, len( bedx.labels ) ):
-			print bedx.labels[i] 
-			print_file(bedx.val[i].val)
-
+	ident.print_val(num)
 #}}}
 
-#{{{ def print_file(fname):
-def print_file(fname):
+#{{{ def print_file(fname, num):
+def print_file(fname, num):
 	if not os.path.isfile(fname):
 		raise Exception('File does not exist in PRINT: ' + fname)
 
 	f = open(fname, 'r')
+	line_num = 0
 	for line in f:
-		print line,
+		if num == -1:
+			print line,
+		else:
+			if line_num < num:
+				print line,
+				line_num+=1;
+			else:
+				break
 	f.close()
 #}}}
 
 #{{{ def save_file(ident, path):
 def save_file(ident, path):
-	allowed_types = ['BED3', 'BED6', 'BED12', 'BEDN']
+	allowed_types = gqltypes.saveable_types
 
-	if not ( ident.name in allowed_types ):
+	if not ( type(ident) in allowed_types ):
 		raise Exception('Type mismatch in SAVE. ' +
 				bed.name + ' not supported.')
 
@@ -681,28 +759,15 @@ def load_file(file_path, filetype_name):
 		return gqltypes.BEDL(return_files, return_labels)
 #}}}
 
-#{{{def count(bedx):
-def count(bedx):
-	allowed_types = ['BED3', 'BED6', 'BED12', 'BEDN', 'BEDM', 'BEDL']
+#{{{def count(ident):
+def count(ident):
+	allowed_types = gqltypes.countable_types
 
-	if not ( bedx.name in allowed_types ):
+	if not ( type(ident) in allowed_types ):
 		raise Exception('Type mismatch in COUNT. ' +
 				bedx.name + ' not supported.')
 
-	if bedx.name == 'BEDM':
-		print "\t" + "\t".join( bedx.labels[1] )
-		for i in range (0, len( (bedx.labels)[0] ) ):
-			count_string = bedx.labels[0][i]
-			for j in range (0, len( (bedx.labels)[1] ) ):
-				count_string = count_string + '\t' + \
-					str(file_len(bedx.val[i][j].val))
-			print count_string
-	elif bedx.name in ['BED3','BED6','BED12','BEDN']:
-		print str( file_len(bedx.val) )
-	elif bedx.name == 'BEDL':
-		for i in range (0, len( bedx.labels ) ):
-			print bedx.labels[i] + "\t" + str(file_len(bedx.val[i].val))
-
+	return ident.count()
 #}}}
 
 #{{{ def file_len(fname):
@@ -748,10 +813,10 @@ def make_mixed_list_with_labels(_N_list, \
 	N_label = []
 	for i in range(0, len(_N_list)):
 		bedx = _N_list[i]
-		if not (bedx.name in allowed_types):
+		if not (type(bedx) in allowed_types):
 			raise Exception('Type mismatch in INTERSECT. ' +
 					bedx.name + ' not supported.')
-		if bedx.name == 'BEDL':
+		if type(bedx) == gqltypes.BEDL:
 			for j in range(0, len(bedx.val)):
 				N_list.append(bedx.val[j])
 				N_label.append(bedx.labels[j])
@@ -769,10 +834,10 @@ def make_mixed_list(_N_list, \
 	N_list = []
 	for i in range(0, len(_N_list)):
 		bedx = _N_list[i]
-		if not (bedx.name in allowed_types):
+		if not (type(bedx) in allowed_types):
 			raise Exception('Type mismatch in INTERSECT. ' +
 					bedx.name + ' not supported.')
-		if bedx.name == 'BEDL':
+		if type(bedx) == gqltypes.BEDL:
 			for j in range(0, len(bedx.val)):
 				N_list.append(bedx.val[j])
 		else:

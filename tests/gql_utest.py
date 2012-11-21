@@ -1,4 +1,4 @@
-#!/sw/bin/python
+#!/usr/bin/env python
 import random
 import unittest
 import sys
@@ -38,16 +38,16 @@ class testGQL(unittest.TestCase):
 	##{{{ def test_load_file(self):
 	def test_load_file(self):
 		a = gqltools.load_file('../data/a.bed','auto')
-		self.assertEqual(a.__class__.__name__, 'BED6')
+		self.assertEqual(type(a), gqltypes.BED6)
 
 		a = gqltools.load_file('../data/bed3.bed','auto')
-		self.assertEqual(a.__class__.__name__, 'BED3')
+		self.assertEqual(type(a), gqltypes.BED3)
 
 		a = gqltools.load_file('../data/bed12.bed','auto')
-		self.assertEqual(a.__class__.__name__, 'BED12')
+		self.assertEqual(type(a), gqltypes.BED12)
 
 		a = gqltools.load_file('../data/a.bed','BED6')
-		self.assertEqual(a.__class__.__name__, 'BED6')
+		self.assertEqual(type(a), gqltypes.BED6)
 
 		was_error = False
 		try:
@@ -57,12 +57,56 @@ class testGQL(unittest.TestCase):
 
 		self.assertTrue(was_error)
 
+		a = gqltools.load_file('../data/*.bed','auto')
+		self.assertEqual(type(a), gqltypes.BEDL)
+
+		a = gqltools.load_file('../data/bed12.bed','auto')
+		c = gqltools.cast(a,gqltypes.BED6)
+		self.assertEqual(type(c), gqltypes.BED6)
+
+		f = open(c.val)
+		num_cols = 0
+		for line in f:
+			cols = line.rstrip().split('\t')
+			num_cols = len(cols)
+		f.close()
+		self.assertEqual(num_cols, 6)
+
+
+		c = gqltools.cast(a,gqltypes.BED4)
+		self.assertEqual(type(c), gqltypes.BED4)
+
+		c = gqltools.cast(a,gqltypes.BED3)
+		self.assertEqual(type(c), gqltypes.BED3)
+
 	#}}}
 
-	##{{{ def test_load_n_file(self):
-	def test_load_n_file(self):
-		a = gqltools.load_file('../data/*.bed','auto')
-		self.assertEqual(a.__class__.__name__, 'BEDL')
+	##{{{ def test_load_file(self):
+	def test_count(self):
+		a = gqltools.load_file('../data/a.bed','auto')
+		C = gqltools.count(a)
+		gqltools.print_val(C,-1)
+
+		b = gqltools.load_file('../data/tiny*.bed','auto')
+		C = gqltools.count(b)
+		gqltools.print_val(C,-1)
+
+
+		ordered_bed_list_N = [gqltools.load_file('../data/a.bed','auto')]
+		ordered_bed_list_M = [gqltools.load_file('../data/b.bed','auto'), \
+				gqltools.load_file('../data/d.bed','auto') ]
+
+		label_list_N = ['a']
+		label_list_M = ['b','d']
+
+		R = gqltools.binary_intersect_beds(ordered_bed_list_N, \
+						  label_list_N, \
+						  ordered_bed_list_M, \
+						  label_list_M)
+
+		C = gqltools.count(R)
+		gqltools.print_val(C,-1)
+		#print C
 
 	#}}}
 
@@ -81,7 +125,7 @@ class testGQL(unittest.TestCase):
 
 		R = gqltools.subtract_beds(bed_N, ordered_bed_list_M)
 
-		self.assertEqual(R.__class__.__name__, bed_N.__class__.__name__)
+		self.assertEqual(type(R), type(bed_N))
 
 	#}}}
 
@@ -96,11 +140,11 @@ class testGQL(unittest.TestCase):
 		bed_labels = ['a','b','c']
 
 		R = gqltools.unary_intersect_beds(ordered_bed_list, bed_labels)
-		self.assertEqual(R.__class__.__name__, 'BEDN')
+		self.assertEqual(type(R), gqltypes.BEDN)
 
 		ordered_bed_list = [gqltools.load_file('../data/tiny*.bed','auto')]
 		R = gqltools.unary_intersect_beds(ordered_bed_list, bed_labels)
-		self.assertEqual(R.__class__.__name__, 'BEDN')
+		self.assertEqual(type(R), gqltypes.BEDN)
 
 
 	#}}}
@@ -120,7 +164,7 @@ class testGQL(unittest.TestCase):
 						  ordered_bed_list_M, \
 						  label_list_M)
 
-		self.assertEqual(R.__class__.__name__, 'BEDM')
+		self.assertEqual(type(R), gqltypes.BEDM)
 		self.assertEqual(len(R.labels[0]), 1)
 		self.assertEqual(len(R.labels[1]), 2)
 		self.assertEqual(len(R.val), 1)
@@ -137,7 +181,24 @@ class testGQL(unittest.TestCase):
 						  ordered_bed_list_M, \
 						  label_list_M)
 
-		self.assertEqual(R.__class__.__name__, 'BEDM')
+		self.assertEqual(type(R), gqltypes.BEDM)
+
+	#{{{ def test_jaccard_beds(self):
+	def test_jaccard_beds(self):
+		ordered_bed_list_N = [gqltools.load_file('../data/a.bed','auto')]
+		ordered_bed_list_M = [gqltools.load_file('../data/b.bed','auto'), \
+				gqltools.load_file('../data/d.bed','auto') ]
+
+		label_list_N = ['a']
+		label_list_M = ['b','d']
+
+		R = gqltools.binary_jaccard_beds(ordered_bed_list_N, \
+						  label_list_N, \
+						  ordered_bed_list_M, \
+						  label_list_M)
+
+		self.assertEqual(type(R), gqltypes.NUMMATRIX)
+		gqltools.print_val(R,-1)
 	#}}}
 
 	#{{{ def test_merge(self):
@@ -152,7 +213,7 @@ class testGQL(unittest.TestCase):
 
 			R = gqltools.merge_beds(merge_type,ordered_bed_list, mods)
 
-			self.assertEqual(R.__class__.__name__, 'BED3')
+			self.assertEqual(type(R), gqltypes.BED3)
 
 			was_error = False
 			try:
@@ -174,7 +235,7 @@ class testGQL(unittest.TestCase):
 					'ANITMODE', 'COLLAPSE', 'COUNT']:
 				mods = {'score':func}
 				R = gqltools.merge_beds(merge_type,ordered_bed_list, mods)
-				self.assertEqual(R.__class__.__name__, 'BED6')
+				self.assertEqual(type(R), gqltypes.BED6)
 
 			ordered_bed_list = [gqltools.load_file('../data/tiny*.bed','auto')]
 
@@ -182,7 +243,7 @@ class testGQL(unittest.TestCase):
 					'ANITMODE', 'COLLAPSE', 'COUNT']:
 				mods = {'score':func}
 				R = gqltools.merge_beds(merge_type,ordered_bed_list, mods)
-				self.assertEqual(R.__class__.__name__, 'BED6')
+				self.assertEqual(type(R), gqltypes.BED6)
 
 	#}}}
 
@@ -194,4 +255,3 @@ class testGQL(unittest.TestCase):
 
 if __name__ == '__main__':
 	unittest.main()
-

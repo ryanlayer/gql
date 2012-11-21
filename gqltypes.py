@@ -1,4 +1,5 @@
 import re
+import gqltools
 
 chr_re = r'chr.+$'
 string_re = r'.*$'
@@ -50,6 +51,12 @@ class SourceFile(object):
 			return False
 		return True
 
+	def count(self):
+		return NUM(gqltools.file_len(self.val))
+
+	def print_val(self,num):
+		gqltools.print_file(self.val, num)
+
 	def __init__(self,val,tmp):
 		self.val = val;
 		self.tmp = tmp;
@@ -61,6 +68,7 @@ class SourceFile(object):
 #{{{class BED3(EnvElement,SourceFile):
 class BED3(EnvElement,SourceFile):
 	name = 'BED3'
+	cols=3
 	col = {'chrom':0,
 		   'start':1,
 		   'end':2,
@@ -74,9 +82,29 @@ class BED3(EnvElement,SourceFile):
 		SourceFile.__init__(self,val,tmp)
 #}}}
 
+#{{{class BED4(EnvElement,SourceFile):
+class BED4(EnvElement,SourceFile):
+	name = 'BED4'
+	cols=4
+	col = {'chrom':0,
+		   'start':1,
+		   'end':2,
+		   'name':3,
+	}
+	# each entry represents a column
+	file_format = [ chr_re, #chrom
+					one_digit_re, #start
+					one_digit_re, #end
+					string_re,		#name
+	]
+	def __init__(self,val,tmp):
+		SourceFile.__init__(self,val,tmp)
+#}}}
+
 #{{{ class BED6(EnvElement,SourceFile):
 class BED6(EnvElement,SourceFile):
 	name = 'BED6'
+	cols=6
 	col = {'chrom':0,
 		   'start':1,
 		   'end':2,
@@ -98,6 +126,7 @@ class BED6(EnvElement,SourceFile):
 #{{{ class BED12(EnvElement,SourceFile):
 class BED12(EnvElement,SourceFile):
 	name = 'BED12'
+	cols=12
 	col = {'chrom':0,
 		   'start':1,
 		   'end':2,
@@ -153,6 +182,12 @@ class BEDN(EnvElement):
 					 str(self.types) + \
 					 ")"
 
+	def count(self):
+		return NUM(gqltools.file_len(self.val))
+
+	def print_val(self,num):
+		gqltools.print_file(self.val, num)
+
 #}}}
 
 #{{{ class BEDM(EnvElement):
@@ -161,6 +196,20 @@ class BEDM(EnvElement):
 	def __init__(self,val,labels):
 		self.val = val
 		self.labels = labels
+
+	def count(self):
+		count_m = []
+		for i in range (0, len( (self.labels)[0] ) ):
+			count_r = [ NUM(gqltools.file_len(x.val)) for x in self.val[i]]
+			count_m.append(count_r)
+		return NUMMATRIX(count_m, self.labels)
+
+	def print_val(self,num):
+		for i in range (0, len( (self.labels)[0] ) ):
+			for j in range (0, len( (self.labels)[1] ) ):
+				print  (self.labels)[0][i] + "::" + (self.labels)[1][j]
+				gqltools.print_file( (self.val)[i][j].val, num)
+
 #}}}
 
 #{{{ class BEDL(EnvElement):
@@ -171,12 +220,77 @@ class BEDL(EnvElement):
 		self.val = val
 		# names of bedx
 		self.labels = labels
+	def count(self):
+		count_r = [ NUM(gqltools.file_len(x.val)) for x in self.val]
+		return NUMLIST(count_r, self.labels)
+
+	def print_val(self, num):
+		for i in range (0, len( self.labels ) ):
+			print self.labels[i] 
+			gqltools.print_file(self.val[i].val, num)
+
 #}}}
 
-source_types = (BED3, BED6, BED12, GENOME)
+#{{{ class NUM(EnvElement):
+class NUM(EnvElement):
+	name = 'NUM'
+	def __init__(self,val):
+		# list of bedx 
+		self.val = val
+	def __str__(self):
+		return str(self.val)
+	def print_val(self,num):
+		print str(self.val)
+
+#}}}
+
+#{{{  class NUMLIST(EvnElement):
+class NUMLIST(EnvElement):
+	name = 'NUMLIST'
+	def __init__(self,val,labels):
+		# list of bedx 
+		self.val = val
+		self.labels = labels
+	def print_val(self,num):
+		print self
+	def __str__(self):
+		output = '\t'.join(self.labels) + '\n'
+		output = output + '\t'.join( [str(x) for x in self.val] ) + '\n'
+		return output
+#}}}
+
+#{{{ class NUMMATRIX(EnvElement):
+class NUMMATRIX(EnvElement):
+	name = 'NUMMATRIX'
+	def __init__(self,val,labels):
+		# list of bedx 
+		self.val = val
+		self.labels = labels
+	def print_val(self,num):
+		print self
+	def __str__(self):
+		output = '\t' + '\t'.join(self.labels[1]) + '\n'
+		for i in range (0, len( (self.labels)[0] ) ):
+			output = output +  \
+					self.labels[0][i] + '\t' + \
+					'\t'.join( [str(x) for x in self.val[i] ] ) + '\n'
+		return output
+#}}}
+
+bed_types = (BED3, BED4, BED6, BED12, BEDL)
+saveable_types = (BED3, BED4, BED6, BED12, BEDN)
+flat_bed_types = (BED3, BED4, BED6, BED12)
+source_types = (BED3, BED4, BED6, BED12, GENOME)
+printable_types = (BED3, BED4, BED6, BED12, BEDN, BEDM, BEDL, \
+				   NUM, NUMLIST, NUMMATRIX)
+countable_types = (BED3, BED4, BED6, BED12, BEDN, BEDM, BEDL)
+
 source_type_map = {
-	'BED3' : BED3, 
-	'BED6' : BED6,
-	'BED12' : BED12, 
-	'GENOME' : GENOME
+	'NUMMATRIX'	: NUMMATRIX,
+	'NUM'		: NUM,
+	'BED3'		: BED3, 
+	'BED4'		: BED4, 
+	'BED6'		: BED6,
+	'BED12'		: BED12, 
+	'GENOME'	: GENOME
 }

@@ -35,13 +35,13 @@ def p_sstmt_assignment(p):
 	'sstmt : IDENTIFIER EQUAL exp SEMICOLON'
 	p[0] = ("assign",p[1],p[3])
 
-def p_sstmt_count(p):
-	'sstmt : COUNT ident SEMICOLON'
-	p[0] = ("count",  p[2] )
-
 def p_sstmt_print(p):
 	'sstmt : PRINT ident SEMICOLON'
 	p[0] = ("print",  p[2] )
+
+def p_sstmt_peak(p):
+	'sstmt : PEAK ident NUMBER SEMICOLON'
+	p[0] = ("peak",  p[2], p[3])
 
 def p_sstmt_save(p):
 	'sstmt : SAVE ident AS file SEMICOLON'
@@ -57,10 +57,6 @@ def p_exp_identifier(p):
 
 def p_exp_number(p):
 	'exp : NUMBER'
-	p[0] = ("number",p[1])
-
-def p_number_number(p):
-	'number : NUMBER'
 	p[0] = ("number",p[1])
 
 def p_exp_string(p):
@@ -85,6 +81,7 @@ def p_filetype(p):
 
 def p_filetypes(p):
 	'''filetypes : BED3
+		| BED4
 		| BED6
 		| BED12
 		| GENOME'''
@@ -94,21 +91,25 @@ def p_exp_load(p):
 	'exp : LOAD file optfiletype'
 	p[0] = ("load", p[2], p[3])
 
-#def p_exp_load_as(p):
-#	'exp : LOAD file AS filetype'
-#	p[0] = ("load", p[2], p[3])
-
 def p_exp_foreach(p):
-	'exp : FOREACH idents optmods'
-	p[0] = ("foreach", p[2], p[3])
+	'exp : FILTER idents optmods'
+	p[0] = ("filter", p[2], p[3])
 
 def p_exp_binary_intersect(p):
 	'exp : idents INTERSECT idents'
 	p[0] = ("binary-intersect",  p[1], p[3] )
 
+def p_exp_binary_jaccard(p):
+	'exp : idents JACCARD idents'
+	p[0] = ("binary-jaccard",  p[1], p[3] )
+
 def p_exp_unary_intersect(p):
 	'exp : INTERSECT idents'
 	p[0] = ("unary-intersect",  p[2] )
+
+def p_exp_count(p):
+	'exp : COUNT ident'
+	p[0] = ("count",  p[2] )
 
 def p_exp_subtract(p):
 	'exp : ident SUBTRACT idents'
@@ -146,7 +147,7 @@ def p_exp_mods_one(p):
 
 def p_exp_mod(p):
 	'''mod : NAME LPAREN function RPAREN
-		| DISTANCE LPAREN number RPAREN
+		| DISTANCE LPAREN NUMBER RPAREN
 		| CHROM LPAREN function RPAREN
 		| START LPAREN function RPAREN
 		| END LPAREN function RPAREN

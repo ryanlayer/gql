@@ -35,7 +35,7 @@ run_test "1 ::: LOAD, PRINT" \
 	$VERBOSE
 
 run_test "2 ::: LOAD AS, COUNT"  \
-	"a = LOAD \"$A\" AS BED6;PRINT a;COUNT a;" \
+	"a = LOAD \"$A\" AS BED6;PRINT a;c=COUNT a;PRINT c;" \
 	0 \
 	$VERBOSE
 
@@ -53,7 +53,8 @@ run_test "5 ::: Binary INTERSECT, COUNT BEDM" \
 	d = LOAD \"$D\";
 	e = a,b INTERSECT a,b,c,d;
 	PRINT e;
-	COUNT e;" \
+	f=COUNT e;
+	PRINT f;" \
 	0 \
 	$VERBOSE
 
@@ -64,7 +65,8 @@ run_test "6 ::: Unary INTERSECT, COUNT BEDN" \
 	d = LOAD \"$D\";
 	e = INTERSECT a,b,c,d;
 	PRINT e;
-	COUNT e;" \
+	f=COUNT e;
+	PRINT f;" \
 	0 \
 	$VERBOSE
 
@@ -74,7 +76,8 @@ run_test "7 ::: SUBTRACT" \
 	c = LOAD \"$C\";
 	e = a SUBTRACT b,c;
 	PRINT e;
-	COUNT e;" \
+	f =COUNT e;
+	PRINT f;" \
 	0 \
 	$VERBOSE
 
@@ -83,25 +86,28 @@ run_test "8 ::: MERGEMAX" \
 	b = LOAD \"$B\";
 	e = MERGEMAX  a,b;
 	PRINT e;
-	COUNT e;" \
+	f =COUNT e;
+	PRINT f;" \
 	0 \
 	$VERBOSE
 
-	run_test "9 ::: MERGEMAX, SCORE,SUM" \
+run_test "9 ::: MERGEMAX, SCORE,SUM" \
 	"a = LOAD \"$A\";
 	b = LOAD \"$B\";
 	e = MERGEMAX a,b WHERE SCORE(SUM);
 	PRINT e;
-	COUNT e;" \
+	f = COUNT e;
+	PRINT f;" \
 	0 \
 	$VERBOSE
 
-	run_test "10 ::: MERGEMAX, SCORE, MEDIAN" \
+run_test "10 ::: MERGEMAX, SCORE, MEDIAN" \
 	"a = LOAD \"$A\";
 	b = LOAD \"$B\";
 	e = MERGEMAX a,b WHERE SCORE(MEDIAN);
 	PRINT e;
-	COUNT e;" \
+	f=COUNT e;
+	PRINT f;" \
 	0 \
 	$VERBOSE
 
@@ -110,7 +116,8 @@ run_test "11 ::: MERGEMAX, SCORE, MIN" \
 	b = LOAD \"$B\";
 	e = MERGEMAX a,b WHERE SCORE(MIN);
 	PRINT e;
-	COUNT e;" \
+	f = COUNT e;
+	PRINT f;" \
 	0 \
 	$VERBOSE
 
@@ -120,7 +127,8 @@ run_test "12 ::: MERGEMAX, SCORE, MAX" \
 	c = LOAD \"$C\";
 	e = MERGEMAX a,b,c WHERE SCORE(MAX);
 	PRINT e;
-	COUNT e;" \
+	f=COUNT e;
+	PRINT f;" \
 	0 \
 	$VERBOSE
 
@@ -162,7 +170,8 @@ run_test "17 ::: MERGEMIN, NAME, SCORE, COUNT" \
 
 run_test "18 ::: LOAD dir, COUNT, PRINT"\
 	"a = LOAD \"$L\";
-	COUNT a;
+	b=COUNT a;
+	PRINT b;
 	PRINT a;" \
 	0 \
 	$VERBOSE
@@ -172,7 +181,8 @@ run_test "19 ::: LOAD dir, Binary INTERSECT, PRINT, COUNT "\
 	 b = LOAD \"$B\";
 	 c = b INTERSECT a;
 	PRINT c;
-	COUNT c;" \
+	d=COUNT c;
+	PRINT d;" \
 	0 \
 	$VERBOSE
 
@@ -180,7 +190,8 @@ run_test "20 ::: LOAD dir, Unary INTERSECT, PRINT" \
 	"a = LOAD \"$L\";
 	e = INTERSECT a;
 	PRINT e;
-	COUNT e;" \
+	f = COUNT e;
+	PRINT f;" \
 	0 \
 	$VERBOSE
 
@@ -189,6 +200,7 @@ run_test "21 ::: MERGEMAX, SCORE,SUM" \
 	"a = LOAD \"$L\";
 	e = MERGEMAX a WHERE NAME(COLLAPSE),SCORE(SUM);
 	PRINT e;
-	COUNT e;" \
+	f = COUNT e;
+	PRINT f;" \
 	0 \
 	$VERBOSE
