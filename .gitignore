@@ -1,3 +1,6 @@
 *.pyc
 parser.out
 parsetabgql.py
+docs/_build/
+*.html
+
