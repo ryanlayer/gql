@@ -35,6 +35,7 @@ def p_sstmt_assignment(p):
 	'sstmt : IDENTIFIER EQUAL exp SEMICOLON'
 	p[0] = ("assign",p[1],p[3])
 
+
 def p_sstmt_print(p):
 	'sstmt : PRINT ident SEMICOLON'
 	p[0] = ("print",  p[2] )
@@ -47,9 +48,9 @@ def p_sstmt_save(p):
 	'sstmt : SAVE ident AS file SEMICOLON'
 	p[0] = ("save",  p[2], p[4] )
 
-def p_sstmt_exp(p):
-	'sstmt : exp SEMICOLON'
-	p[0] = ("exp",p[1])
+#def p_sstmt_exp(p):
+#	'sstmt : exp SEMICOLON'
+#	p[0] = ("exp",p[1])
 
 def p_exp_identifier(p):
 	'exp : IDENTIFIER'
@@ -90,6 +91,7 @@ def p_filetypes(p):
 def p_exp_load(p):
 	'exp : LOAD file optfiletype'
 	p[0] = ("load", p[2], p[3])
+
 
 def p_exp_foreach(p):
 	'exp : FILTER idents optmods'
@@ -213,3 +215,9 @@ def p_idnent_identifier(p):
 # Error rule for syntax errors
 def p_error(p):
 	print "Syntax error in input. line:" + str(p.lineno) 
+
+def parse(data,debug=0):
+	bparser.error = 0
+	p = bparser.parse(data,debug=debug)
+	if bparser.error: return None
+	return p

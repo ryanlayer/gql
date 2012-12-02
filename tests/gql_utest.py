@@ -8,10 +8,15 @@ import gqltypes
 import pybedtools
 import os.path
 import os
+import json
 
 class testGQL(unittest.TestCase):
 
-	#def setUp(self):
+	#{{{ def setUp(self):
+	def setUp(self):
+		json_data=open('../gql.conf')
+		gqltools.config = json.load(json_data)
+	#}}}
 
 	#{{{ def test_tempfile_management(self):
 	def test_tempfile_management(self):
@@ -37,6 +42,10 @@ class testGQL(unittest.TestCase):
 
 	##{{{ def test_load_file(self):
 	def test_load_file(self):
+		a = gqltools.load_file('mm9:c2c12:chipseq','auto')
+		gqltools.print_val(a,10)
+		self.assertEqual(type(a), gqltypes.BEDL)
+
 		a = gqltools.load_file('../data/a.bed','auto')
 		self.assertEqual(type(a), gqltypes.BED6)
 
@@ -78,18 +87,17 @@ class testGQL(unittest.TestCase):
 
 		c = gqltools.cast(a,gqltypes.BED3)
 		self.assertEqual(type(c), gqltypes.BED3)
-
 	#}}}
 
-	##{{{ def test_load_file(self):
+	##{{{ def test_count(self):
 	def test_count(self):
 		a = gqltools.load_file('../data/a.bed','auto')
 		C = gqltools.count(a)
-		gqltools.print_val(C,-1)
+		#gqltools.print_val(C,-1)
 
 		b = gqltools.load_file('../data/tiny*.bed','auto')
 		C = gqltools.count(b)
-		gqltools.print_val(C,-1)
+		#gqltools.print_val(C,-1)
 
 
 		ordered_bed_list_N = [gqltools.load_file('../data/a.bed','auto')]
@@ -105,7 +113,7 @@ class testGQL(unittest.TestCase):
 						  label_list_M)
 
 		C = gqltools.count(R)
-		gqltools.print_val(C,-1)
+		#gqltools.print_val(C,-1)
 		#print C
 
 	#}}}
@@ -182,6 +190,7 @@ class testGQL(unittest.TestCase):
 						  label_list_M)
 
 		self.assertEqual(type(R), gqltypes.BEDM)
+	#}}}
 
 	#{{{ def test_jaccard_beds(self):
 	def test_jaccard_beds(self):
@@ -198,7 +207,7 @@ class testGQL(unittest.TestCase):
 						  label_list_M)
 
 		self.assertEqual(type(R), gqltypes.NUMMATRIX)
-		gqltools.print_val(R,-1)
+		#gqltools.print_val(R,-1)
 	#}}}
 
 	#{{{ def test_merge(self):

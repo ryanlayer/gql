@@ -1,0 +1,29 @@
+<group>
+
+<group name="hg19">
+<track name="exons" url="http://hg19_exons.bed"/>
+</group> <!-- end hg19 -->
+
+<group name="mm9">
+
+<group name="c2c12">
+
+<group name ="chipseq">
+<track name="polii_mt" url="http://localhost/~rl6sf/mm9/PolII_MT-Sonicated_input_MT.bed"/>
+<track name="polii_mb" url="http://localhost/~rl6sf/mm9/PolII_MB-Sonicated_input_MB.bed"/>
+</group> <!-- chipseq -->
+
+<group name="rnaseq">
+<track name="mt" url="http://localhost/~rl6sf/mm9/MT_rnaseq.bed" />
+<track name="mb" url="http://localhost/~rl6sf/mm9/MB_rnaseq.bed"/>
+</group> <!-- rnaseq -->
+
+</group> <!-- c2c12 -->
+
+<track name="exons" url="http://localhost/~rl6sf/mm9/mm9_exons.bed"/>
+<track name="mirna" url="http://localhost/~rl6sf/mm9/mm9_miRNA.bed"/>
+<track name="tss" url="http://localhost/~rl6sf/mm9/mm9_tss_strand_5KB.name.bed"/>
+
+</group> <!-- end c2c12 -->
+
+</group>

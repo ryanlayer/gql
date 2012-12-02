@@ -12,8 +12,17 @@ from collections import deque
 import shutil
 import numpy
 import random
+import urllib
+import json
 
 tmp_files = []
+config = {}
+
+#{{{ def load_config():
+def load_config():
+	json_data=open('gql.conf')
+	config = json.load(json_data)
+#}}}
 
 #{{{ def add_tmp_file(tmp):
 def add_tmp_file(tmp):
@@ -726,29 +735,80 @@ def save_file(ident, path):
 #{{{ def load_file(file_path, filetype_name):
 def load_file(file_path, filetype_name):
 
-	files = glob.glob(file_path)
-
-	if len(files) == 0:
-		raise Exception ('No file(s) not found at ' + file_path, 'load')
+	# local files are not temp files, but remote files are
+	is_remote = False
 
 	return_files = []
 	return_labels = []
 
+	# attempt to get the files from the local path
+	files = glob.glob(file_path)
+
+	if len(files) == 0:
+		# if nothing at the local path, then see if it is a remote path
+		# if so, then fetch the files, store at temp path, and place 
+		# the temp file path in the files list
+		is_remote = True
+		#url = 'http://localhost/cgi-bin/name.py?path=' + file_path
+
+		# retrieve the path from the name server 
+		try:
+			url = config['fileserver'] + 'name.py?path=' + file_path
+			json_response = urllib.urlopen(url)
+			s = json_response.read()
+			remote_paths = json.loads(s)
+			json_response.close()
+		except Exception as e:
+			raise Exception ('Error retrieving remote file listing')
+
+		# fetch remote files
+		for remote_path in remote_paths:
+			tmp_file_path = get_temp_file_name(pybedtools.get_tempdir(), \
+											   'load', \
+											   'tmp')
+			# first value is the label
+			return_labels.append(remote_path[0])
+			# second is the path
+			urllib.urlretrieve(remote_path[1], tmp_file_path)
+			files.append(tmp_file_path)
+
+		# if there is not remote file at this url, then raise
+		if len(remote_paths) == 0:
+			raise Exception ('No file(s) not found at ' + file_path, 'load')
+
 	for f in files:
 		if (filetype_name == 'auto') :
 			type_found = False
+			# loops through the types to see which one matches
 			for source_type in gqltypes.source_types:
 				if source_type.test_filetype(f):
 					type_found = True
-					return_files.append(source_type(f, False))
-					return_labels.append(os.path.basename(f))
+					# if the files is remote, then the temp paramater is true
+					# otherwise it is false
+					new_file = source_type(f, is_remote)
+
+					if is_remote:
+						add_tmp_file(new_file)
+					else:
+						# remote labels were collected previously 
+						return_labels.append(os.path.basename(f))
+
+					return_files.append(new_file)
 			if not type_found:
 				raise Exception('Unknown filetype for:' + f)
 		else:
 			source_type = gqltypes.source_type_map[filetype_name]
 			if source_type.test_filetype(f):
-				return_files.append(source_type(f, False))
-				return_labels.append(f)
+				# if the files is remote, then the temp paramater is true
+				# otherwise it is false
+				new_file = source_type(f, is_remote)
+				if is_remote:
+					add_tmp_file(new_file)
+				else:
+					# remote labels were collected previously 
+					return_labels.append(os.path.basename(f))
+
+				return_files.append(new_file)
 			else:
 				raise Exception('Filetype mismatch:' + f + \
 						" does not appear to be " + filetype_name)

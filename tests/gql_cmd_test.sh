@@ -23,6 +23,7 @@ function run_test {
 		cat $TMP.out
 	elif [ $4 -eq 1 ]
 	then
+		cat $TMP 
 		cat $TMP.out
 	fi
 	rm $TMP
