@@ -1,6 +1,7 @@
 #!/usr/local/bin/python
 import ply.lex as lex
 import ply.yacc as yacc
+from os.path import expanduser
 import gqltokens
 import gqlgrammar
 import gqlinterp
@@ -10,6 +11,7 @@ import tempfile
 import parsetab
 import optparse
 import json
+import readline
 
 json_data=open('gql.conf')
 gqltools.config = json.load(json_data)
@@ -18,22 +20,35 @@ gqllexer    = lex.lex(module=gqltokens)
 gqlparser   = yacc.yacc(module=gqlgrammar)
 global_env = (None, {})
 
+history_file = expanduser("~/.gal_history")
+
 if len(sys.argv) == 1:
-	while 1:
+	try:
+		readline.read_history_file(history_file)
+	except IOError:
+		pass
+
+	while True:
 		try:
 			data = raw_input('> ')
-		except EOFError:
+			if data != '':
+				readline.write_history_file(history_file)
+				gqlast = None;
+				try:
+					gqlast = gqlparser.parse(data,lexer=gqllexer,tracking=True)
+				except Exception as e:
+					print "Parse error in input."
+				if (gqlast != None):
+					try:
+						result = gqlinterp.interpret_cmdline(gqlast, global_env)
+					except Exception as e:
+						print str(e)
+		except KeyboardInterrupt:
+			print ''
 			break
-		if not data: continue
-		try:
-			gqlast = gqlparser.parse(data,lexer=gqllexer,tracking=True)
-			if gqlast:
-				#try:
-				result = gqlinterp.interpret_cmdline(gqlast, global_env)
-				#except Exception as interp_e:
-					#print interp_e
-		except Exception as parse_e:
-			print parse_e 
+		except EOFError:
+			print
+			break
 	gqltools.clear_tmp_files()
 else:
 	f = open(sys.argv[1], 'r')

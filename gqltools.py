@@ -759,7 +759,7 @@ def load_file(file_path, filetype_name):
 			remote_paths = json.loads(s)
 			json_response.close()
 		except Exception as e:
-			raise Exception ('Error retrieving remote file listing')
+			raise Exception ('Error retrieving file')
 
 		# fetch remote files
 		for remote_path in remote_paths:

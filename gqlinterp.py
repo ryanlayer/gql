@@ -392,8 +392,7 @@ def interpret_cmdline(ast,global_env):
   			eval_elt(elt,global_env) 
 		except Exception as e:
 			msgs = e.args
-			print 'ERROR: '	+ str(msgs[0]) + " line:"  + \
-				str(env_lookup('curr line',global_env))
-			sys.exit(1)	
+			raise Exception('ERROR: '	+ str(msgs[0]) + " line:"  + \
+				str(env_lookup('curr line',global_env)))
 	return 0
 #}}}
