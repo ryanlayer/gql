@@ -282,8 +282,9 @@ saveable_types = (BED3, BED4, BED6, BED12, BEDN)
 flat_bed_types = (BED3, BED4, BED6, BED12)
 source_types = (BED3, BED4, BED6, BED12, GENOME)
 printable_types = (BED3, BED4, BED6, BED12, BEDN, BEDM, BEDL, \
-				   NUM, NUMLIST, NUMMATRIX)
+				   NUM, NUMLIST, NUMMATRIX, GENOME)
 countable_types = (BED3, BED4, BED6, BED12, BEDN, BEDM, BEDL)
+complementable_types = (BED3, BED4, BED6, BED12)
 
 source_type_map = {
 	'NUMMATRIX'	: NUMMATRIX,

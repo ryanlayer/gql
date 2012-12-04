@@ -478,6 +478,42 @@ def merge_beds(merge_type, _N_list, merge_opts):
 	return result
 #}}}
 
+#{{{ def complement_bedx(bedx, genome):
+def complement_bedx(bedx, genome):
+	pybedtools.settings.KEEP_TEMPFILES=True
+
+	allowed_types = gqltypes.complementable_types
+
+	if not ( type(bedx) in allowed_types ):
+		raise Exception('Type mismatch in COMPLEMENT. ' +\
+				ident.name + ' not supported.')
+
+	kwargs = {}
+	if type(genome) is str:
+		try:
+			test = pybedtools.chromsizes(genome)
+			kwargs['genome']=genome
+		except Exception as e:
+			raise Exception('Error locating and/or retrieve genome ' +
+				genome + ' in COMPLEMENT.')
+	else:
+		if type(genome) is gqltypes.GENOME:
+			kwargs['g'] = genome.val
+		else:
+			raise Exception('Type mismatch in COMPLEMENT.  GENOME expect ' + \
+					'but ' + genome.name + ' encountered.')
+
+	a = pybedtools.BedTool(bedx.val)
+	r = a.complement(**kwargs)
+
+	output_type = gqltypes.BED3
+
+	result = output_type(r.fn, True)
+	add_tmp_file(result)
+
+	return result
+#}}}
+
 #{{{ def def filter_bedx(_N_list, _opts):
 def filter_bedx(_N_list, filter_opts):
 	pybedtools.settings.KEEP_TEMPFILES=True
@@ -501,7 +537,7 @@ def filter_bedx(_N_list, filter_opts):
 	elif gqltypes.BED12 in input_types:
 		output_type = gqltypes.BED12
 	else:
-		raise Exception('Output type could not be determined in FOREACH.')
+		raise Exception('Output type could not be determined in FILTER.')
 
 	filter_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
 									 'filter_bedx', \
@@ -531,7 +567,7 @@ def filter_bedx(_N_list, filter_opts):
 						if type(val) is str:
 							test='"'+str(test)+'"'
 						result = eval(str(test) + op + str(val))
-						bool_string = bool_string +str(result)
+						bool_string = bool_string +	str(result)
 					else:
 						bool_string = bool_string + test[0]
 				keep_line = keep_line &  eval(bool_string)
@@ -577,20 +613,9 @@ def cast(bedx, new_type):
 	start_range = 0
 	end_range = new_type.cols
 
-#	if new_type == 'BED12':
-#		end_range = 13
-#	elif new_type == 'BED6':
-#		end_range = 6 
-#	elif new_type == 'BED4':
-#		end_range = 4 
-#	elif new_type == 'BED3':
-#		end_range = 3 
-
 	new_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
 									 'cast', \
 									 'tmp')
-
-	#new_class = gqltypes.source_type_map[new_type]
 
 	new_file = new_type(new_file_name, True)
 	add_tmp_file(new_file)

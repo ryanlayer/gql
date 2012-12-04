@@ -43,8 +43,17 @@ class testGQL(unittest.TestCase):
 	##{{{ def test_load_file(self):
 	def test_load_file(self):
 		a = gqltools.load_file('mm9:c2c12:chipseq','auto')
-		gqltools.print_val(a,10)
 		self.assertEqual(type(a), gqltypes.BEDL)
+
+		a = gqltools.load_file('mm9:c2c12:chipseq:polii_mt','auto')
+		self.assertEqual(type(a), gqltypes.BED4)
+
+		was_error = False
+		try:
+			a = gqltools.load_file('mm9:c2c12:chipseq:mt','auto')
+		except Exception:
+			was_error = True
+		self.assertTrue(was_error)
 
 		a = gqltools.load_file('../data/a.bed','auto')
 		self.assertEqual(type(a), gqltypes.BED6)
@@ -87,6 +96,36 @@ class testGQL(unittest.TestCase):
 
 		c = gqltools.cast(a,gqltypes.BED3)
 		self.assertEqual(type(c), gqltypes.BED3)
+	#}}}
+
+	##{{{ def test_count(self):
+	def test_complement(self):
+		a = gqltools.load_file('../data/a.bed','auto')
+		g = gqltools.load_file('../data/human.hg19.genome','auto')
+
+		R = gqltools.complement_bedx(a,g)
+		self.assertEqual(type(R), gqltypes.BED3)
+
+		R = gqltools.complement_bedx(a,"hg19")
+
+
+		was_error = False
+		try:
+			R = gqltools.complement_bedx(a,"hg1")
+		except Exception:
+			was_error = True
+		self.assertTrue(was_error)
+
+		was_error = False
+		try:
+			R = gqltools.complement_bedx(a,a)
+		except Exception:
+			was_error = True
+		self.assertTrue(was_error)
+
+		#a = gqltools.load_file('../data/*.bed','auto')
+		#R = gqltools.complement_bedx(a,g)
+
 	#}}}
 
 	##{{{ def test_count(self):
