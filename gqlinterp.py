@@ -117,6 +117,21 @@ def eval_exp(exp, env):
 		return gqltools.cast(bedx,  new_type)
 	#}}}
 
+	#{{{ if etype == 'complement':
+	if etype == 'complement':
+		#print exp
+		#('complement', ('identifier', 'a'), ('identifier', 'g'))
+		#('complement', ('identifier', 'a'), 'hg19')
+		target_bed = eval_exp(exp[1],env)
+		genome = exp[2]
+		if not type(genome) is str:
+			genome = eval_exp(genome,env)
+
+		return gqltools.complement_bedx(target_bed, genome)
+
+		#return gqltools.cast(bedx,  new_type)
+	#}}}
+
 	#{{{ elif etype == 'binary-intersect':
 	elif etype == 'binary-intersect':
 		#print exp

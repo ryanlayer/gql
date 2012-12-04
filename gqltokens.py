@@ -7,6 +7,7 @@ reserved = (
 	'MERGEMAX',
 	'MERGEFLAT',
 	'MERGEMIN',
+	'COMPLEMENT',
 	'FILTER',
 	'LOAD',
 	'CAST',

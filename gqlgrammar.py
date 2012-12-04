@@ -88,10 +88,17 @@ def p_filetypes(p):
 		| GENOME'''
 	p[0] = p[1]
 
+def p_exp_complement_g(p):
+	'exp : COMPLEMENT ident AS ident'
+	p[0] = ("complement", p[2], p[4])
+
+def p_exp_complement_genome(p):
+	'exp : COMPLEMENT ident AS STRING'
+	p[0] = ("complement", p[2], p[4])
+
 def p_exp_load(p):
 	'exp : LOAD file optfiletype'
 	p[0] = ("load", p[2], p[3])
-
 
 def p_exp_foreach(p):
 	'exp : FILTER idents optmods'
