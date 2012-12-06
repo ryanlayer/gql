@@ -18,6 +18,13 @@ import json
 tmp_files = []
 config = {}
 
+class ToolsException(Exception):
+	def __init__(self, msg, method):
+		self.msg = msg 
+		self.method = method 
+	def __str__(self):
+		return msg + ':' + method
+
 #{{{ def load_config():
 def load_config():
 	json_data=open('gql.conf')
@@ -163,7 +170,8 @@ def merge_bed_stack(out_stack):
 				( len(out_rows[i]) == len(out_rows[i + 1]) )
 
 	if not same_size:
-		raise Exception('Unmached sizes in intersection')
+		raise ToolsException('Unmached sizes in intersection', \
+				'merge_bed_stack')
 
 
 	out_file = open(R_file_name, 'w')
@@ -197,11 +205,13 @@ def binary_intersect_beds(_N_list, \
 
 	(N_list, N_label) = make_mixed_list_with_labels(_N_list, \
 													_N_labels, \
-													allowed_types)
+													allowed_types, \
+													'INTERSECT')
 
 	(M_list, M_label) = make_mixed_list_with_labels(_M_list, \
 													_M_labels, \
-													allowed_types)
+													allowed_types, \
+													'INTERSECT')
 
 	NM_matrix = []
 	for N in N_list:
@@ -212,7 +222,9 @@ def binary_intersect_beds(_N_list, \
 			try:
 				NM_bed = N_bed.intersect(b=M_bed,wo=True)
 			except pybedtools.helpers.BEDToolsError as e:
-				raise Exception('Error in INTERSECT. ' + e.msg )
+				raise ToolsException('Error in INTERSECT. ' + e.msg,\
+						'binary_intersect_beds')
+						
 
 			NM = gqltypes.BEDN(NM_bed.fn,True)
 			NM.types = [N.name,M.name]
@@ -234,11 +246,13 @@ def binary_jaccard_beds(_N_list, \
 
 	(N_list, N_label) = make_mixed_list_with_labels(_N_list, \
 													_N_labels, \
-													allowed_types)
+													allowed_types,\
+													'JACCARD')
 
 	(M_list, M_label) = make_mixed_list_with_labels(_M_list, \
 													_M_labels, \
-													allowed_types)
+													allowed_types,\
+													'JACCARD')
 
 	num_matrix = []
 	label_matrix = []
@@ -250,7 +264,8 @@ def binary_jaccard_beds(_N_list, \
 			try:
 				r = N_bed.jaccard(b=M_bed)
 			except pybedtools.helpers.BEDToolsError as e:
-				raise Exception('Error in JACCARD. ' + e.msg )
+				raise ToolsException('Error in JACCARD. ' + e.msg,\
+						'binary_jaccard_beds')
 
 			num = gqltypes.NUM(r['jaccard'])
 			num_list.append(num)
@@ -265,9 +280,10 @@ def unary_intersect_beds(_N_list, _N_labels):
 
 	allowed_types = gqltypes.bed_types
 
-	(N_list, N_labels) = make_mixed_list_with_labels(_N_list,
-													 _N_labels,
-													 allowed_types)
+	(N_list, N_labels) = make_mixed_list_with_labels(_N_list,\
+													 _N_labels,\
+													 allowed_types,\
+													 'INTERSECT')
 
 	N_types = []
 	for N in N_list:
@@ -287,7 +303,8 @@ def unary_intersect_beds(_N_list, _N_labels):
 		try:
 			AB_bed = A_bed.intersect(b=B_bed,wo=True)
 		except pybedtools.helpers.BEDToolsError as e:
-			raise Exception('Error in INTERSECT. ' + e.msg )
+			raise ToolsException('Error in INTERSECT. ' + e.msg,\
+					'unary_intersect_beds')
 
 		AB = gqltypes.BEDN(AB_bed.fn, True)
 
@@ -315,11 +332,12 @@ def subtract_beds(bedx, _N_list):
 
 	allowed_types = gqltypes.bed_types
 
-	N_list = make_mixed_list(_N_list, allowed_types)
+	N_list = make_mixed_list(_N_list, allowed_types,'SUBTRACT')
 
 	if not (type(bedx) in gqltypes.flat_bed_types):
-		raise Exception('Type mismatch in SUBTRACT. ' + \
-				bedx.name + ' not supported.')
+		raise ToolsException('Type mismatch in SUBTRACT. ' + \
+				bedx.name + ' not supported.',\
+				'subtract_beds')
 
 	bed_queue = deque([bedx] + N_list)
 	while ( len(bed_queue) > 1 ):
@@ -333,7 +351,8 @@ def subtract_beds(bedx, _N_list):
 		try:
 			AB_bed = A_bed.subtract(b=B_bed,A=True)
 		except pybedtools.helpers.BEDToolsError as e:
-			raise Exception('Error in SUBTRACT. ' +  e.msg )
+			raise ToolsException('Error in SUBTRACT. ' +  e.msg,\
+					'subtract_beds')
 
 		AB = A.__class__(AB_bed.fn, True)
 		add_tmp_file(AB)
@@ -349,7 +368,7 @@ def merge_beds(merge_type, _N_list, merge_opts):
 
 	allowed_types = gqltypes.bed_types
 
-	N_list = make_mixed_list(_N_list, allowed_types)
+	N_list = make_mixed_list(_N_list, allowed_types,'MERGE')
 
 	input_types = []
 
@@ -372,13 +391,16 @@ def merge_beds(merge_type, _N_list, merge_opts):
 
 	for merge_opt in merge_opts:
 		if not ( merge_opt in valid_args ):
-			raise Exception('Invalid option in MERGE. ' + \
-						merge_opt + ' not supported.')
+			raise ToolsException('Invalid option in MERGE. ' + \
+						merge_opt + ' not supported.',\
+						'merge_beds')
 
 		if merge_opt == 'score':
 			if not ( merge_opts[ merge_opt ] in score_functions ) :
-				raise Exception('SCORE funciton not supported by MERGE. ' + \
-						merge_opts[ merge_opt ])
+				raise ToolsException(\
+						'SCORE funciton not supported by MERGE. ' + \
+						merge_opts[ merge_opt ],
+						'merge_beds')
 			else:
 				kwargs[ valid_args[ merge_opt ] ] = \
 						score_functions[ merge_opts[ merge_opt ] ]
@@ -386,17 +408,22 @@ def merge_beds(merge_type, _N_list, merge_opts):
 			if (gqltypes.BED3 in input_types ) or \
 				( gqltypes.BED4 in input_types) or \
 				( gqltypes.BED5 in input_types)  :
-				raise Exception('Type mismatch in MERGE. Cannot match by ' +
-					'strand with givne input types')
+				raise ToolsException(\
+						'Type mismatch in MERGE. Cannot match by ' + \
+						'strand with givne input types',\
+						'merge_beds')
 			kwargs[ valid_args[ merge_opt ] ] = True
 
 		elif (merge_opt == 'distance'):
 			if merge_type == 'flat':
-				raise Exception('DISTANCE not supported for MERGEFLAT')
+				raise ToolsException('DISTANCE not supported for MERGEFLAT',\
+						'merge_beds')
 			elif merge_type == 'min':
-				raise Exception('DISTANCE not supported for MERGEMIN')
+				raise ToolsException('DISTANCE not supported for MERGEMIN',\
+						'merge_beds')
 			elif merge_type == 'max':
-				raise Exception('DISTANCE not supported for MERGEMAX')
+				raise ToolsException('DISTANCE not supported for MERGEMAX',\
+						'merge_beds')
 			else:
 				kwargs[ valid_args[ merge_opt ] ] = merge_opts[ merge_opt ]
 
@@ -404,8 +431,10 @@ def merge_beds(merge_type, _N_list, merge_opts):
 			if merge_opts[ merge_opt ] == 'COLLAPSE':
 				kwargs[ valid_args[ merge_opt ] ] = True
 			else :
-				raise Exception('NAME funciton not supported by MERGE. ' + \
-						merge_opts[ merge_opt ])
+				raise ToolsException(\
+						'NAME funciton not supported by MERGE. ' + \
+						merge_opts[ merge_opt ],
+						'merge_beds')
 	
 
 	output_type = gqltypes.BED3
@@ -455,21 +484,25 @@ def merge_beds(merge_type, _N_list, merge_opts):
 			try:
 				merged_bed = x.multi_intersect(**kwargs)
 			except pybedtools.helpers.BEDToolsError as e:
-				raise Exception('Error in MERGE. ' +  e.msg )
+				raise ToolsException('Error in MERGE. ' +  e.msg,\
+						'merge_beds')
 		elif merge_type == 'min':
 			kwargs['cluster'] = True
 			try:
 				merged_bed = x.multi_intersect(**kwargs)
 			except pybedtools.helpers.BEDToolsError as e:
-				raise Exception('Error in MERGE. ' +  e.msg )
+				raise ToolsException('Error in MERGE. ' +  e.msg,\
+						'merge_beds')
 		elif merge_type == 'max':
 			kwargs['merge'] = True
 			try:
 				merged_bed = x.multi_intersect(**kwargs)
 			except pybedtools.helpers.BEDToolsError as e:
-				raise Exception('Error in MERGE. ' +  e.msg )
+				raise ToolsException('Error in MERGE. ' +  e.msg,\
+						'merge_beds')
 	else:
-		raise Exception('Supported by MERGE. ' + merge_type)
+		raise ToolsException('Supported by MERGE. ' + merge_type,\
+				'merge_beds')
 	
 	result = output_type(merged_bed.fn, True)
 
@@ -485,8 +518,9 @@ def complement_bedx(bedx, genome):
 	allowed_types = gqltypes.complementable_types
 
 	if not ( type(bedx) in allowed_types ):
-		raise Exception('Type mismatch in COMPLEMENT. ' +\
-				ident.name + ' not supported.')
+		raise ToolsException('Type mismatch in COMPLEMENT. ' +\
+				ident.name + ' not supported.',\
+				'complement_bedx')
 
 	kwargs = {}
 	if type(genome) is str:
@@ -494,14 +528,18 @@ def complement_bedx(bedx, genome):
 			test = pybedtools.chromsizes(genome)
 			kwargs['genome']=genome
 		except Exception as e:
-			raise Exception('Error locating and/or retrieve genome ' +
-				genome + ' in COMPLEMENT.')
+			raise ToolsException(\
+					'Error locating and/or retrieve genome ' + \
+					genome + ' in COMPLEMENT.',\
+					'complement_bedx')
 	else:
 		if type(genome) is gqltypes.GENOME:
 			kwargs['g'] = genome.val
 		else:
-			raise Exception('Type mismatch in COMPLEMENT.  GENOME expect ' + \
-					'but ' + genome.name + ' encountered.')
+			raise ToolsException(\
+					'Type mismatch in COMPLEMENT.  GENOME expect ' + \
+					'but ' + genome.name + ' encountered.',\
+					'complement_bedx')
 
 	a = pybedtools.BedTool(bedx.val)
 	r = a.complement(**kwargs)
@@ -520,7 +558,7 @@ def filter_bedx(_N_list, filter_opts):
 
 	allowed_types = gqltypes.bed_types
 
-	N_list = make_mixed_list(_N_list, allowed_types)
+	N_list = make_mixed_list(_N_list, allowed_types,'FILTER')
 
 	input_types = []
 
@@ -537,7 +575,9 @@ def filter_bedx(_N_list, filter_opts):
 	elif gqltypes.BED12 in input_types:
 		output_type = gqltypes.BED12
 	else:
-		raise Exception('Output type could not be determined in FILTER.')
+		raise ToolsException(\
+				'Output type could not be determined in FILTER.',\
+				'filter_bedx')
 
 	filter_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
 									 'filter_bedx', \
@@ -555,8 +595,10 @@ def filter_bedx(_N_list, filter_opts):
 			for opt in filter_opts:
 				bool_string = ""
 				if not opt in  bed_type.col:
-					raise Exception('Invalid field for given filetype ' +
-							'in FOREACH. ' + opt + ' and ' + bed_type.name)
+					raise ToolsException(\
+							'Invalid field for given filetype ' + \
+							'in FOREACH. ' + opt + ' and ' + bed_type.name,\
+							'filter_bedx')
 				opt_col = bed_type.col[opt]
 
 				for test in filter_opts[opt]:
@@ -583,32 +625,41 @@ def cast(bedx, new_type):
 	allowed_types = gqltypes.flat_bed_types
 
 	if not type(bedx) in allowed_types:
-		raise Exception('Type mismatch in CAST. ' +
-					bedx.name + ' not supported.')
+		raise ToolsException('Type mismatch in CAST. ' +\
+					bedx.name + ' not supported.',\
+					'cast')
 
 	if type(bedx) == gqltypes.BED12 and  \
 				not new_type in \
 				(gqltypes.BED3,gqltypes.BED4,gqltypes.BED6,gqltypes.BED12):
-		raise Exception ('Type mismatch in CAST. Cannot cast from ' + \
-				bedx.name + ' to ' + new_type.name)
+		raise ToolsException (\
+				'Type mismatch in CAST. Cannot cast from ' + \
+				bedx.name + ' to ' + new_type.name,\
+				'cast')
 
 	elif type(bedx) == gqltypes.BED6 and \
 				not new_type in \
 				(gqltypes.BED3,gqltypes.BED4,gqltypes.BED6):
-		raise Exception ('Type mismatch in CAST. Cannot cast from ' + \
-				bedx.name + ' to ' + new_type.name)
+		raise ToolsException (\
+				'Type mismatch in CAST. Cannot cast from ' + \
+				bedx.name + ' to ' + new_type.name,\
+				'cast')
 
 	elif type(bedx) == gqltypes.BED4 and \
 				not new_type in \
 				(gqltypes.BED3,gqltypes.BED4):
-		raise Exception ('Type mismatch in CAST. Cannot cast from ' + \
-				bedx.name + ' to ' + new_type.name)
+		raise ToolsException (\
+				'Type mismatch in CAST. Cannot cast from ' + \
+				bedx.name + ' to ' + new_type.name,\
+				'cast')
 
 	elif type(bedx) == gqltypes.BED3 and \
 				not new_type  in \
 				(gqltypes.BED3,gqltypes.BED3):
-		raise Exception ('Type mismatch in CAST. Cannot cast from ' + \
-				bedx.name + ' to ' + new_type.name)
+		raise ToolsException (\
+				'Type mismatch in CAST. Cannot cast from ' + \
+				bedx.name + ' to ' + new_type.name,\
+				'cast')
 
 	start_range = 0
 	end_range = new_type.cols
@@ -637,8 +688,9 @@ def mergemin_bedn(bednfile):
 	allowed_types = gqltypes.BEDN
 
 	if not ( type(bednfile) in allowed_types ):
-		raise Exception('Type mismatch in MEREGEMIN. ' +
-				bednfile.name + ' not supported.')
+		raise ToolsException('Type mismatch in MEREGEMIN. ' +
+				bednfile.name + ' not supported.',\
+				'mergemin_bedn')
 	
 	pybedtools.settings.KEEP_TEMPFILES=True
 
@@ -721,8 +773,9 @@ def print_val(ident, num):
 	allowed_types = gqltypes.printable_types
 
 	if not ( type(ident) in allowed_types ):
-		raise Exception('Type mismatch in PRINT. ' +\
-				ident.name + ' not supported.')
+		raise ToolsException('Type mismatch in PRINT. ' +\
+				ident.name + ' not supported.',\
+				'print_val')
 	
 	ident.print_val(num)
 #}}}
@@ -730,7 +783,8 @@ def print_val(ident, num):
 #{{{ def print_file(fname, num):
 def print_file(fname, num):
 	if not os.path.isfile(fname):
-		raise Exception('File does not exist in PRINT: ' + fname)
+		raise ToolsException('File does not exist in PRINT: ' + fname,\
+				'print_file')
 
 	f = open(fname, 'r')
 	line_num = 0
@@ -751,8 +805,9 @@ def save_file(ident, path):
 	allowed_types = gqltypes.saveable_types
 
 	if not ( type(ident) in allowed_types ):
-		raise Exception('Type mismatch in SAVE. ' +
-				bed.name + ' not supported.')
+		raise ToolsException('Type mismatch in SAVE. ' +
+				bed.name + ' not supported.',\
+				'save_file')
 
 	shutil.copy(ident.val, path)
 #}}}
@@ -784,7 +839,8 @@ def load_file(file_path, filetype_name):
 			remote_paths = json.loads(s)
 			json_response.close()
 		except Exception as e:
-			raise Exception ('Error retrieving file')
+			raise ToolsException ('Error retrieving file',\
+					'load_file')
 
 		# fetch remote files
 		for remote_path in remote_paths:
@@ -799,7 +855,8 @@ def load_file(file_path, filetype_name):
 
 		# if there is not remote file at this url, then raise
 		if len(remote_paths) == 0:
-			raise Exception ('No file(s) not found at ' + file_path, 'load')
+			raise ToolsException (\
+					'No file(s) not found at ' + file_path, 'load_file')
 
 	for f in files:
 		if (filetype_name == 'auto') :
@@ -820,7 +877,7 @@ def load_file(file_path, filetype_name):
 
 					return_files.append(new_file)
 			if not type_found:
-				raise Exception('Unknown filetype for:' + f)
+				raise ToolsException('Unknown filetype for:' + f,'load_file')
 		else:
 			source_type = gqltypes.source_type_map[filetype_name]
 			if source_type.test_filetype(f):
@@ -835,8 +892,9 @@ def load_file(file_path, filetype_name):
 
 				return_files.append(new_file)
 			else:
-				raise Exception('Filetype mismatch:' + f + \
-						" does not appear to be " + filetype_name)
+				raise ToolsException('Filetype mismatch:' + f + \
+						" does not appear to be " + filetype_name,
+						'load_file')
 
 	if len(return_files) == 1:
 		return return_files[0]
@@ -849,8 +907,8 @@ def count(ident):
 	allowed_types = gqltypes.countable_types
 
 	if not ( type(ident) in allowed_types ):
-		raise Exception('Type mismatch in COUNT. ' +
-				bedx.name + ' not supported.')
+		raise ToolsException('Type mismatch in COUNT. ' +
+				bedx.name + ' not supported.', 'count')
 
 	return ident.count()
 #}}}
@@ -892,15 +950,17 @@ def bufcount(filename):
 #{{{ def make_mixed_list_with_labels(_N_list, \
 def make_mixed_list_with_labels(_N_list, \
 								_N_labels,
-								allowed_types):
+								allowed_types,
+								calling_method):
 
 	N_list = []
 	N_label = []
 	for i in range(0, len(_N_list)):
 		bedx = _N_list[i]
 		if not (type(bedx) in allowed_types):
-			raise Exception('Type mismatch in INTERSECT. ' +
-					bedx.name + ' not supported.')
+			raise ToolsException('Type mismatch in '+ calling_method + '. '+
+					bedx.name + ' not supported.',
+					'make_mixed_list_with_labels')
 		if type(bedx) == gqltypes.BEDL:
 			for j in range(0, len(bedx.val)):
 				N_list.append(bedx.val[j])
@@ -912,16 +972,18 @@ def make_mixed_list_with_labels(_N_list, \
 	return (N_list, N_label)
 #}}}
 
-#{{{ def make_mixed_list_with_labels(_N_list, \
+#{{{ def make_mixed_list(_N_list, \
 def make_mixed_list(_N_list, \
-					allowed_types):
+					allowed_types,
+					calling_method):
 
 	N_list = []
 	for i in range(0, len(_N_list)):
 		bedx = _N_list[i]
 		if not (type(bedx) in allowed_types):
-			raise Exception('Type mismatch in INTERSECT. ' +
-					bedx.name + ' not supported.')
+			raise ToolsException('Type mismatch in '+ calling_method + '. '+
+					bedx.name + ' not supported.',
+					'make_mixed_list')
 		if type(bedx) == gqltypes.BEDL:
 			for j in range(0, len(bedx.val)):
 				N_list.append(bedx.val[j])

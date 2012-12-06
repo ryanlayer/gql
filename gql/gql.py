@@ -1,6 +1,7 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
 import ply.lex as lex
 import ply.yacc as yacc
+import os
 from os.path import expanduser
 import gqltokens
 import gqlgrammar
@@ -12,6 +13,8 @@ import parsetab
 import optparse
 import json
 import readline
+import traceback
+sys.path.append('./')
 
 class SimpleCompleter(object):
 
@@ -39,50 +42,67 @@ class SimpleCompleter(object):
 			response = None
 		return response
 
-json_data=open('gql.conf')
-gqltools.config = json.load(json_data)
-
-gqllexer    = lex.lex(module=gqltokens)
-gqlparser   = yacc.yacc(module=gqlgrammar)
-global_env = (None, {})
-
-history_file = expanduser("~/.gal_history")
-readline.set_completer(SimpleCompleter(gqltokens.reserved).complete)
-
-readline.parse_and_bind("tab: complete")
-
-if len(sys.argv) == 1:
+def determine_path ():
+	"""Borrowed from wxglade.py"""
 	try:
-		readline.read_history_file(history_file)
-	except IOError:
-		pass
+		root = __file__
+		if os.path.islink (root):
+			root = os.path.realpath (root)
+		return os.path.dirname (os.path.abspath (root))
+	except:
+		print "I'm sorry, but something is wrong."
+		print "There is no __file__ variable. Please contact the author."
+		sys.exit ()
 
-	while True:
+def main():
+	curr_path = determine_path()
+	json_data=open(curr_path + '/config/gql.conf')
+	gqltools.config = json.load(json_data)
+
+	gqllexer    = lex.lex(module=gqltokens)
+	#gqlparser   = yacc.yacc(module=gqlgrammar,write_tables=0,debug=0)
+	global_env = (None, {})
+
+	history_file = expanduser("~/.gql_history")
+	readline.set_completer(SimpleCompleter(gqltokens.reserved).complete)
+
+	readline.parse_and_bind("tab: complete")
+
+	if len(sys.argv) == 1:
 		try:
-			data = raw_input('> ')
-			if data != '':
-				readline.write_history_file(history_file)
-				gqlast = None;
-				try:
-					gqlast = gqlparser.parse(data,lexer=gqllexer,tracking=True)
-				except Exception as e:
-					print "Parse error in input."
-				if (gqlast != None):
+			readline.read_history_file(history_file)
+		except IOError:
+			pass
+
+		while True:
+			try:
+				data = raw_input('> ')
+				if data != '':
+					readline.write_history_file(history_file)
+					#gqlast = None;
 					try:
-						result = gqlinterp.interpret_cmdline(gqlast, global_env)
+						gqlast = gqlparser.parse(data,\
+												 lexer=gqllexer,\
+												 tracking=True)
+						if (gqlast != None):
+							result = gqlinterp.interpret_cmdline(gqlast,\
+																 global_env)
 					except Exception as e:
 						print str(e)
-		except KeyboardInterrupt:
-			print ''
-			break
-		except EOFError:
-			print
-			break
-	gqltools.clear_tmp_files()
-else:
-	f = open(sys.argv[1], 'r')
-	data = f.read()
-	f.close()
-	gqlast = gqlparser.parse(data,lexer=gqllexer,tracking=True)
-	result = gqlinterp.interpret(gqlast)
-	gqltools.clear_tmp_files()
+			except KeyboardInterrupt:
+				print ''
+				break
+			except EOFError:
+				print
+				break
+		gqltools.clear_tmp_files()
+	else:
+		f = open(sys.argv[1], 'r')
+		data = f.read()
+		f.close()
+		gqlast = gqlparser.parse(data,lexer=gqllexer,tracking=True)
+		result = gqlinterp.interpret(gqlast)
+		gqltools.clear_tmp_files()
+
+if __name__ == "__main__":
+	main()
