@@ -19,38 +19,42 @@ def p_gql_empty(p):
 	p[0] = [ ]
 
 def p_element_stmt(p):
-	'element : sstmt'
+	'element : sstmt SEMICOLON'
 	p[0] = ("stmt",p.lineno(1),p[1])
 
-#def p_stmts(p):
-#	'stmts : sstmt stmts'
-#	#print "p_stmts"
-#	p[0] = [p[1]] + p[2]
-#
-#def p_stmts_empty(p):
-#	'stmts : '
-#	p[0] = [ ]
+def p_element_no_semicolon(p):
+	'element : sstmt '
+	print 'Missing ";"'
+	p[0] = None
+	p.parser.error = 1
 
 def p_sstmt_assignment(p):
-	'sstmt : IDENTIFIER EQUAL exp SEMICOLON'
+	'sstmt : IDENTIFIER EQUAL exp'
 	p[0] = ("assign",p[1],p[3])
+
+def p_sstmt_assignment_error(p):
+	'sstmt : IDENTIFIER EQUAL error'
+	print 'Invalid assignment.'
+	p[0] = None
+	p.parser.error = 1
 
 
 def p_sstmt_print(p):
-	'sstmt : PRINT ident SEMICOLON'
+	'sstmt : PRINT ident'
 	p[0] = ("print",  p[2] )
 
 def p_sstmt_peak(p):
-	'sstmt : PEAK ident NUMBER SEMICOLON'
+	'sstmt : PEAK ident NUMBER'
 	p[0] = ("peak",  p[2], p[3])
 
 def p_sstmt_save(p):
-	'sstmt : SAVE ident AS file SEMICOLON'
+	'sstmt : SAVE ident AS file'
 	p[0] = ("save",  p[2], p[4] )
 
-#def p_sstmt_exp(p):
-#	'sstmt : exp SEMICOLON'
-#	p[0] = ("exp",p[1])
+def p_sstmt_exp(p):
+	'sstmt : exp '
+	print 'Invalid statement.'
+	p[0] = None
 
 def p_exp_identifier(p):
 	'exp : IDENTIFIER'
@@ -221,9 +225,13 @@ def p_idnent_identifier(p):
 
 # Error rule for syntax errors
 def p_error(p):
-	print "Syntax error in input. line:" + str(p.lineno) 
+	#print "p_error: " + str(p)
+	#p.parser.error = 1
+	print p
+	if p:
+		print "Syntax error in input. line:" + str(p.lineno) 
 
-def parse(data,debug=0):
+def gqlparse(data,debug=0):
 	bparser.error = 0
 	p = bparser.parse(data,debug=debug)
 	if bparser.error: return None

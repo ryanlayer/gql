@@ -1,17 +1,16 @@
 # test load
 
 #g = LOAD "data/human.hg18.genome" AS GENOME;
-
-a = LOAD "data/a.bed";
-b = LOAD "data/b.bed";
-c = LOAD "data/c.bed";
-d = LOAD "data/bed3.bed";
-
-l = LOAD "data/tiny*bed";
-
-e = COUNT l;
-PRINT e;
-
+a = LOAD "mm9:c2c12:chipseq";
+c = COUNT a;
+PRINT c;
+#        a = LOAD "data/tiny_a.bed";
+#        b = LOAD "data/tiny_b.bed";
+#        c = LOAD "data/tiny_c.bed";
+#        e = MERGEMIN a,b,c WHERE NAME(COLLAPSE),SCORE(COUNT);
+#        f = FILTER e WHERE SCORE(>1);
+#        PRINT f;
+#
 
 #e = MERGEMAX a,b,c,d WHERE SCORE(==100);
 #e = FOREACH a,b,c,d WHERE SCORE(<100&>50&!=75),START(>1000),END(<10000),CHROM(=="chr1");

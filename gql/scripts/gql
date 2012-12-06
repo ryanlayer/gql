@@ -1,0 +1,5 @@
+#!/usr/bin/env python
+
+import gql.scripts
+import gql.gql
+gql.gql.main()

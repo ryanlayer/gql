@@ -3,6 +3,15 @@ import gqltools
 import gqltypes
 import sys
 
+#{{{class InterpException(Exception):
+class InterpException(Exception):
+	def __init__(self, msg, method):
+		self.msg = msg 
+		self.method = method 
+	def __str__(self):
+		return msg + ':' + method
+#}}}
+
 #{{{ def env_lookup|update|debug
 def env_lookup(vname,env):
 	if vname in env[1]:
@@ -25,9 +34,10 @@ def eval_elt(elt, env):
 	#print elt # DEBUG
 	env_update('curr line', elt[1], env)
 	if elt[0] == 'stmt':
-		eval_stmt(elt[2], env)
+		if elt[2]:
+			eval_stmt(elt[2], env)
 	else:
-		raise Exception('unknown  element ' + elt, 'eval_elt')
+		raise InterpException('unknown  element ' + elt, 'eval_elt')
 		#print "ERROR: eval_elt: unknown element " + elt
 #}}}
 
@@ -85,7 +95,7 @@ def eval_exp(exp, env):
 		value = env_lookup(vname,env)
 		if value == None:
 			#print "ERROR: unbound variable " + vname
-			raise Exception('Unbound variable ' + vname, 'identifier')
+			raise InterpException('Unbound variable ' + vname, 'identifier')
 		else:
 			return value
 	#}}}
@@ -264,7 +274,7 @@ def eval_exp(exp, env):
 			modifier_type = modifier[0]
 
 			if modifier_type in mods:
-				raise Exception('Multiple definitions of ' + \
+				raise InterpException('Multiple definitions of ' + \
 						modifier_type + '.')
 
 			mods[modifier_type] = eval_exp(modifier[1], env)
@@ -315,13 +325,13 @@ def eval_exp(exp, env):
 			modifier_type = modifier[0]
 
 			if modifier_type in mods:
-				raise Exception('Multiple definitions of ' + \
+				raise InterpException('Multiple definitions of ' + \
 						modifier_type + '.')
 
 			function = eval_exp(modifier[1], env)
 			if function[0] != 'BOOL':
-				raise Exception('Unsupported function type in FOREACH: ' + \
-						function )
+				raise InterpException('Unsupported function type in FOREACH: ' \
+						+ function )
 			bool_funcs = []
 			for element in function[1]:
 				bool_func = []
@@ -333,13 +343,15 @@ def eval_exp(exp, env):
 					elif val[0] == 'string':
 						bool_func = [op, '"' + val[1] + '"']
 					else:
-						raise Exception('Unsupported value type in boolean ' +
+						raise InterpException(\
+								'Unsupported value type in boolean ' + \
 							'function in FOREACH.')
 				elif element[0] == 'conj':
 					conj = element[1][0]
 					bool_func = [conj]
 				else:
-					raise Exception('Error in boolean function in FOREACH.')
+					raise InterpException(\
+							'Error in boolean function in FOREACH.')
 				bool_funcs.append(bool_func)
 		
 			mods[modifier_type] = bool_funcs
@@ -390,12 +402,21 @@ def interpret(ast):
 	global_env = (None, {}) 
 	for elt in ast:
 		try:
-  			eval_elt(elt,global_env) 
+			if elt:
+				eval_elt(elt,global_env) 
+
+		except InterpException as e:
+			raise Exception(e.msg + \
+				" line:" + str(env_lookup('curr line',global_env)))
+
+		except gqltools.ToolsException as e:
+			raise Exception(e.msg + \
+				" line:" + str(env_lookup('curr line',global_env)))
+
 		except Exception as e:
 			msgs = e.args
-			print 'ERROR: '	+ str(msgs[0]) + " line:"  + \
-				str(env_lookup('curr line',global_env))
-			sys.exit(1)	
+			raise Exception(str(e) + \
+				" line:" + str(env_lookup('curr line',global_env)))
 	return 0
 	#env_debug(global_env) #Debug
 #}}}	
@@ -404,10 +425,15 @@ def interpret(ast):
 def interpret_cmdline(ast,global_env):
 	for elt in ast:
 		try:
-  			eval_elt(elt,global_env) 
+			if elt:
+				eval_elt(elt,global_env) 
+		except InterpException as e:
+			raise Exception(e.msg)
+		except gqltools.ToolsException as e:
+			raise Exception(e.msg)
 		except Exception as e:
+			print type(e)
 			msgs = e.args
-			raise Exception('ERROR: '	+ str(msgs[0]) + " line:"  + \
-				str(env_lookup('curr line',global_env)))
+			raise Exception(str(msgs[0]))
 	return 0
 #}}}
