@@ -6,10 +6,14 @@ from matplotlib import pyplot as plt
 chr_re = r'chr.+$'
 string_re = r'.*$'
 float_re = r'-?[0-9]+(\.[0-9]*)?'
+float_or_empty_re = r'-?[0-9]+(\.[0-9]*)?|\.$'
 one_digit_re = r'[0-9]+$'
+one_digit_or_empty_re = r'[0-9]+$|\.$'
 cs_digits_re = r'[0-9]+(,[0-9]+)*'
 strand_re = r'\+|\-'
+strand_or_empty_re = r'\+|\-|\.'
 rgb_re = r'[0-9]+,[0-9]+,[0-9]+$'
+rgb_or_empty_re = r'[0-9]+,[0-9]+,[0-9]+$'
 
 
 #{{{ class EnvElement(object):
@@ -154,6 +158,34 @@ class BED12(EnvElement,SourceFile):
 					one_digit_re,	#blockcount
 					cs_digits_re,	#blocksizes
 					cs_digits_re,	#blockstarts
+	]
+	def __init__(self,val,tmp):
+		SourceFile.__init__(self,val,tmp)
+#}}}
+
+#{{{ class GTF(EnvElement,SourceFile):
+class GTF(EnvElement,SourceFile):
+	name = 'GTF'
+	cols=9
+	col = {'chrom':0,
+		   'source':1,
+		   'name':2,
+		   'start':3,
+		   'end':4,
+		   'score':5,
+		   'strand':6,
+		   'frame':7,
+		   'attribute':8,
+	}
+	file_format = [ chr_re,			#chrom
+					string_re,		#source
+					string_re,		#feature
+					one_digit_re,	#start
+					one_digit_re,	#end
+					float_or_empty_re,		#score
+					strand_or_empty_re,		#strand
+					one_digit_or_empty_re,	#frame
+					string_re,		#attribute
 	]
 	def __init__(self,val,tmp):
 		SourceFile.__init__(self,val,tmp)
@@ -316,11 +348,12 @@ class LIST(EnvElement):
 #}}}
 
 bed_types = [BED3, BED4, BED6, BED12, BEDL]
+filterable_types = [BED3, BED4, BED6, GTF, BED12, BEDL]
 saveable_types = [BED3, BED4, BED6, BED12, BEDN]
-flat_bed_types = [BED3, BED4, BED6, BED12]
-source_types = [BED3, BED4, BED6, BED12, GENOME]
+flat_bed_types = [BED3, BED4, BED6, GTF, BED12]
+source_types = [BED3, BED4, BED6, GTF, BED12, GENOME]
 printable_types = [BED3, BED4, BED6, BED12, BEDN, BEDM, BEDL, \
-				   NUM, NUMLIST, NUMMATRIX, GENOME]
+				   NUM, NUMLIST, NUMMATRIX, GENOME, GTF]
 countable_types = [BED3, BED4, BED6, BED12, BEDN, BEDM, BEDL]
 complementable_types = [BED3, BED4, BED6, BED12]
 hilbertable_types = [BED3, BED4, BED6, BED12]
@@ -336,5 +369,6 @@ source_type_map = {
 	'BED4'		: BED4, 
 	'BED6'		: BED6,
 	'BED12'		: BED12, 
+	'GTF'		: GTF, 
 	'GENOME'	: GENOME
 }

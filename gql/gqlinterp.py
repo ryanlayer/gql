@@ -132,11 +132,13 @@ def eval_exp(exp, env):
 
 	#{{{ if etype == 'cast':
 	if etype == 'cast':
-		#print exp
+		print exp
 		#('cast', ('identifier', 'a'), ('filetype', 'BED6'), [])
 		ident = exp[1]
 		bedx = eval_exp(ident, env)
 		new_type = eval_exp(exp[2],env)
+		print bedx
+		print new_type
 
 		return gqltools.cast(bedx,  new_type)
 	#}}}

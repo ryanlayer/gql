@@ -557,7 +557,7 @@ def complement_bedx(bedx, genome):
 def filter_bedx(_N_list, filter_opts):
 	pybedtools.settings.KEEP_TEMPFILES=True
 
-	allowed_types = gqltypes.bed_types
+	allowed_types = gqltypes.filterable_types
 
 	N_list = make_mixed_list(_N_list, allowed_types,'FILTER')
 
@@ -575,10 +575,16 @@ def filter_bedx(_N_list, filter_opts):
 		output_type = gqltypes.BED6
 	elif gqltypes.BED12 in input_types:
 		output_type = gqltypes.BED12
+	elif gqltypes.GTF in input_types:
+		output_type = gqltypes.GTF
 	else:
 		raise ToolsException(\
 				'Output type could not be determined in FILTER.',\
 				'filter_bedx')
+
+	output_field_col_pairs = output_type.col.items()
+	output_field_col_pairs.sort(key=lambda x: x[1])
+	output_fields = [pair[0] for pair in output_field_col_pairs]
 
 	filter_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
 									 'filter_bedx', \
@@ -629,7 +635,10 @@ def filter_bedx(_N_list, filter_opts):
 								'filter_bedx')
 				keep_line = keep_line &  eval(bool_string)
 			if keep_line:
-				filter_file.write(line)
+				filter_file.write(\
+					"\t".join(\
+					[cols[bed_type.col[field]] for field in output_fields]) + \
+					"\n")
 
 	return filter_bedx
 #}}}
@@ -643,7 +652,7 @@ def sort_bedx(bedx):
 	if not type(bedx) in allowed_types:
 		raise ToolsException('Type mismatch in SORT. ' +\
 					bedx.name + ' not supported.',\
-					'cast')
+					'sort')
 
 	try:
 		new_type = gqltypes.source_type_map[bedx.name]
@@ -667,40 +676,18 @@ def cast(bedx, new_type):
 					bedx.name + ' not supported.',\
 					'cast')
 
-	if type(bedx) == gqltypes.BED12 and  \
-				not new_type in \
-				(gqltypes.BED3,gqltypes.BED4,gqltypes.BED6,gqltypes.BED12):
+	# check to see if the existing lists has all of the fields that are
+	# required for the new field
+	has_all_fields = True
+	for x in new_type.col.keys():
+		has_all_fields = has_all_fields and x in type(bedx).col.keys()
+
+	if not has_all_fields:
 		raise ToolsException (\
 				'Type mismatch in CAST. Cannot cast from ' + \
 				bedx.name + ' to ' + new_type.name,\
 				'cast')
 
-	elif type(bedx) == gqltypes.BED6 and \
-				not new_type in \
-				(gqltypes.BED3,gqltypes.BED4,gqltypes.BED6):
-		raise ToolsException (\
-				'Type mismatch in CAST. Cannot cast from ' + \
-				bedx.name + ' to ' + new_type.name,\
-				'cast')
-
-	elif type(bedx) == gqltypes.BED4 and \
-				not new_type in \
-				(gqltypes.BED3,gqltypes.BED4):
-		raise ToolsException (\
-				'Type mismatch in CAST. Cannot cast from ' + \
-				bedx.name + ' to ' + new_type.name,\
-				'cast')
-
-	elif type(bedx) == gqltypes.BED3 and \
-				not new_type  in \
-				(gqltypes.BED3,gqltypes.BED3):
-		raise ToolsException (\
-				'Type mismatch in CAST. Cannot cast from ' + \
-				bedx.name + ' to ' + new_type.name,\
-				'cast')
-
-	start_range = 0
-	end_range = new_type.cols
 
 	new_file_name = get_temp_file_name(pybedtools.get_tempdir(), \
 									 'cast', \
@@ -709,11 +696,18 @@ def cast(bedx, new_type):
 	new_file = new_type(new_file_name, True)
 	add_tmp_file(new_file)
 
+	new_field_col_pairs = new_type.col.items()
+	new_field_col_pairs.sort(key=lambda x: x[1])
+	new_fields = [pair[0] for pair in new_field_col_pairs]
+
 	in_file = open(bedx.val, 'r')
 	out_file = open(new_file_name, 'w')
 	for line in in_file:
 		cols = line.rstrip().split('\t')
-		out_file.write("\t".join(cols[start_range:end_range]) + "\n")
+		out_file.write("\t".join(\
+				[cols[type(bedx).col[field]] for field in new_fields]) + \
+				"\n")
+		#out_file.write("\t".join(cols[start_range:end_range]) + "\n")
 	in_file.close()
 	out_file.close()
 

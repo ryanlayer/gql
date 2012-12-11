@@ -28,6 +28,8 @@ reserved = (
 	'START',
 	'END',
 	'STRAND',
+	'FRAME',
+	'ATTRIBUTE',
 	'MIN',
 	'SUM',
 	'MAX',
