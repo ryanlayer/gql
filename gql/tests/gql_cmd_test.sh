@@ -177,15 +177,15 @@ run_test "18 ::: LOAD dir, COUNT, PRINT"\
 	0 \
 	$VERBOSE
 
-run_test "19 ::: LOAD dir, Binary INTERSECT, PRINT, COUNT "\
+run_test "19 ::: LOAD dir, Binary INTERSECT, PRINT, COUNT " \
 	"a = LOAD \"$L\";
 	 b = LOAD \"$B\";
 	 c = b INTERSECT a;
-	PRINT c;
-	d=COUNT c;
-	PRINT d;" \
-	0 \
-	$VERBOSE
+	 PRINT c;
+	 d=COUNT c;
+	 PRINT d;" \
+	 0 \
+	 $VERBOSE
 
 run_test "20 ::: LOAD dir, Unary INTERSECT, PRINT" \
 	"a = LOAD \"$L\";

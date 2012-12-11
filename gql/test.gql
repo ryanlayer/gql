@@ -1,14 +1,45 @@
 # test load
+a = LOAD "data/tiny_a.bed";
+b = LOAD "data/tiny_b.bed";
+c = LOAD "data/tiny_c.bed";
+d = LOAD "data/tiny_d.bed";
+mt = LOAD "mm9:c2c12:chipseq:polii_mt";
+mb = LOAD "mm9:c2c12:chipseq:polii_mb";
 
-#g = LOAD "data/human.hg18.genome" AS GENOME;
-a = LOAD "mm9:c2c12:chipseq";
-c = COUNT a;
-PRINT c;
-#        a = LOAD "data/tiny_a.bed";
-#        b = LOAD "data/tiny_b.bed";
-#        c = LOAD "data/tiny_c.bed";
-#        e = MERGEMIN a,b,c WHERE NAME(COLLAPSE),SCORE(COUNT);
-#        f = FILTER e WHERE SCORE(>1);
+g = LOAD "data/human.hg18.genome" AS GENOME;
+
+#a = LOAD "mm9:c2c12:chipseq";
+#c = COUNT a;
+#PRINT c;
+
+#a = LOAD "data/tiny_a.bed";
+#g = LOAD "data/human.hg19.genome";
+
+# HILBERT EXAMPLE
+#h_mt = HILBERT mt WHERE CHROM("chr1"),GENOME("hg19"),DIMENSION(128);
+#h_mb = HILBERT mb WHERE CHROM("chr1"),GENOME("hg19"),DIMENSION(128);
+#PLOT h_mt AS "h_mt.png";
+#PLOT h_mb AS "h_mb.png";
+
+mt_sort = SORT mt;
+mb_sort = SORT mb;
+r = mt_sort,mb_sort JACCARD mt_sort,mb_sort;
+PRINT r;
+
+
+
+#a = LOAD "data/tiny_*.bed";
+#b = LOAD "data/tiny_b.bed";
+#c = b INTERSECT b;
+#PRINT c;
+#d  =COUNT c;
+#PRINT d;
+
+#b = LOAD "data/tiny_b.bed";
+#c = LOAD "data/tiny_c.bed";
+#e = MERGEMIN a,b,c WHERE NAME(COLLAPSE),SCORE(COUNT);
+#PRINT e;
+#f = FILTER e WHERE SCORE(>1);
 #        PRINT f;
 #
 
@@ -31,10 +62,11 @@ PRINT c;
 
 # test intersect
 #e = INTERSECT a,b,c,d;
-
 #e = a,b INTERSECT a,b,c,d;
 
-#COUNT e;
+#f = COUNT e;
+
+#PRINT f;
 
 #COUNT a;
 

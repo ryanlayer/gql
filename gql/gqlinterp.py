@@ -80,6 +80,13 @@ def eval_stmt(stmt, env):
 		file_path = eval_exp(stmt[2], env)
 		gqltools.save_file(ident, file_path)
 	#}}}
+
+	#{{{elif stype == 'plot':
+	elif stype == 'plot':
+		ident = eval_exp(stmt[1],env)
+		file_path = eval_exp(stmt[2], env)
+		gqltools.plot_val(ident, file_path)
+	#}}}
 #}}}
 
 #{{{def eval_exp(exp, env):
@@ -116,6 +123,13 @@ def eval_exp(exp, env):
 		return gqltools.load_file(file_path, filetype_name)
 	#}}}
 
+	#{{{ if etype == 'sort':
+	if etype == 'sort':
+		ident = exp[1]
+		bedx = eval_exp(ident, env)
+		return gqltools.sort_bedx(bedx)
+	#}}}
+
 	#{{{ if etype == 'cast':
 	if etype == 'cast':
 		#print exp
@@ -125,6 +139,64 @@ def eval_exp(exp, env):
 		new_type = eval_exp(exp[2],env)
 
 		return gqltools.cast(bedx,  new_type)
+	#}}}
+
+	#{{{ if etype == 'hilbert':
+	if etype == 'hilbert':
+		#print exp
+		# ('hilbert',
+		#  ('identifier', 'a'), 
+		#  [('chrom',
+		#     ('function', 'BOOLEAN', [('compare', ('==', ('string', 'chr1')))])), 
+		#   ('genome',
+		#	  ('function', 'BOOLEAN', [('compare', ('==', ('string', 'hg19')))])),
+		#   ('dimension', 8.0)])
+		#
+		# ('hilbert', 
+		#  ('identifier', 'a'),
+		#  [('chrom',
+		#    ('function', 'BOOLEAN', [('compare', ('==', ('string', 'chr1')))])),
+		#   ('genome',
+		#    ('function', 'BOOLEAN', [('compare', ('==', ('identifier', 'g')))])), 
+		#   ('dimension', 128.0)])
+		#
+		# ('hilbert', 
+		#  ('identifier', 'a'),
+		#  [('chrom', 
+		#    ('function', 'EXPRESSION', ('string', 'chr1'))), 
+		#   ('genome',
+		#    ('function', 'EXPRESSION', ('string', 'hg19'))),
+		#   ('dimension', 128.0)])
+
+		idents = exp[1]
+		n_bedfiles = []
+		for ident in idents:
+			bedx = eval_exp(ident, env)
+			n_bedfiles = n_bedfiles + [ bedx ]
+
+		n_labels = []
+		for ident in idents:
+			n_labels = n_labels + [ident[1]]
+
+		modifiers = exp[2] 
+		mods = {}
+		for modifier in modifiers:
+			modifier_type = modifier[0]
+
+			if modifier_type in mods:
+				raise InterpException('Multiple definitions of ' + \
+						modifier_type + ' in HILBERT.', 'hilbert')
+
+			function = eval_exp(modifier[1], env)
+			if function[0] not in ['EXPRESSION']:
+				raise InterpException('Unsupported function type ' +
+					function[0] + ' in HILBERT.', 'hilbert')
+
+			mods[modifier_type] = eval_exp(function[1], env)
+
+		r = gqltools.hilbert_curve_matrix(n_bedfiles, n_labels, mods)
+	
+		return r
 	#}}}
 
 	#{{{ if etype == 'complement':
@@ -167,6 +239,8 @@ def eval_exp(exp, env):
 		m_labels = []
 		for ident in idents:
 			m_labels = m_labels + [ident[1]]
+
+
 
 		return gqltools.binary_intersect_beds(n_bedfiles, \
 											  n_labels, \
@@ -253,17 +327,17 @@ def eval_exp(exp, env):
 
 	#{{{ elif etype == 'merge':
 	elif etype == 'merge':
-		#print exp # Debug
+		print exp # Debug
 		# ('merge', 
-		#	[('identifier', 'a'), ('identifier', 'b'), ('identifier', 'c')], 
-		#	('score', ('function', 'MIN'), None))
-		# or
-		# ('merge', 
-		#	[('identifier', 'a'), ('identifier', 'b'), ('identifier', 'c')], 
-		#	None)
-		merge_type = exp[1]
+		#  'min',
+		#  [('identifier', 'a'),
+		#   ('identifier', 'b'),
+		#   ('identifier', 'c') ],
+		#  [('name', ('function', 'AGGREGATE', 'COLLAPSE')), 
+		#   ('score', ('function', 'AGGREGATE', 'COUNT'))])
+		merge_type = exp[1] #min,max,flat
 		idents = exp[2]
-		modifiers = exp[3]
+		modifiers = exp[3] #should all be functions and AGGREGATE
 		bedfiles = []
 		for ident in idents:
 			bedx = eval_exp(ident, env)
@@ -275,9 +349,15 @@ def eval_exp(exp, env):
 
 			if modifier_type in mods:
 				raise InterpException('Multiple definitions of ' + \
-						modifier_type + '.')
+						modifier_type + ' in MERGER.', 'merge')
 
-			mods[modifier_type] = eval_exp(modifier[1], env)
+			function = eval_exp(modifier[1], env)
+			if function[0] != 'AGGREGATE':
+				raise InterpException('Unsupported function type ' + \
+						function[0] + ' in MERGE.', 'merge' )
+
+			#mods[modifier_type] = eval_exp(modifier[1], env)
+			mods[modifier_type] = function[1]
 
 		return gqltools.merge_beds(merge_type,bedfiles, mods)
 	#}}}
@@ -290,7 +370,7 @@ def eval_exp(exp, env):
 		#		('identifier', 'b'),
 		#		('identifier', 'c'),
 		#		('identifier', 'd')],
-		#	[   ('score', ('function', 'BOOL',
+		#	[   ('score', ('function', 'BOOLEAN',
 		#			[   ('compare', ('<', ('number', 100.0))),
 		#				('conj', '&'),
 		#				('compare', ('>', ('number', 50.0))),
@@ -298,15 +378,15 @@ def eval_exp(exp, env):
 		#				('compare', ('!=', ('number', 75.0)))
 		#			])
 		#		),
-		#		('start', ('function', 'BOOL',
+		#		('start', ('function', 'BOOLEAN',
 		#			[   ('compare', ('>', ('number', 1000.0)))
 		#			])
 		#		),
-		#		('end', ('function', 'BOOL',
+		#		('end', ('function', 'BOOLEAN',
 		#			[   ('compare', ('<', ('number', 10000.0)))
 		#			])
 		#		),
-		#		('chrom', ('function', 'BOOL',
+		#		('chrom', ('function', 'BOOLEAN',
 		#			[ ('compare', ('==', ('string', 'chr1')))
 		#			])
 		#		)
@@ -326,12 +406,12 @@ def eval_exp(exp, env):
 
 			if modifier_type in mods:
 				raise InterpException('Multiple definitions of ' + \
-						modifier_type + '.')
+						modifier_type + ' in FILTER.', 'filter')
 
 			function = eval_exp(modifier[1], env)
-			if function[0] != 'BOOL':
-				raise InterpException('Unsupported function type in FOREACH: ' \
-						+ function )
+			if function[0] != 'BOOLEAN':
+				raise InterpException('Unsupported function type ' + \
+						function[0] + ' in FILTER.','filter' )
 			bool_funcs = []
 			for element in function[1]:
 				bool_func = []
@@ -344,14 +424,14 @@ def eval_exp(exp, env):
 						bool_func = [op, '"' + val[1] + '"']
 					else:
 						raise InterpException(\
-								'Unsupported value type in boolean ' + \
-							'function in FOREACH.')
+								'Unsupported value type ' + val[0] + 'in boolean ' + \
+							'function in FILTER.','filter')
 				elif element[0] == 'conj':
 					conj = element[1][0]
 					bool_func = [conj]
 				else:
 					raise InterpException(\
-							'Error in boolean function in FOREACH.')
+							'Error in boolean function in FILTER.','filter')
 				bool_funcs.append(bool_func)
 		
 			mods[modifier_type] = bool_funcs

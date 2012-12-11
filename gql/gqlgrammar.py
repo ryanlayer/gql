@@ -22,11 +22,11 @@ def p_element_stmt(p):
 	'element : sstmt SEMICOLON'
 	p[0] = ("stmt",p.lineno(1),p[1])
 
-def p_element_no_semicolon(p):
-	'element : sstmt '
-	print 'Missing ";"'
-	p[0] = None
-	p.parser.error = 1
+#def p_element_no_semicolon(p):
+#	'element : sstmt '
+#	print 'Missing ";"'
+#	p[0] = None
+#	p.parser.error = 1
 
 def p_sstmt_assignment(p):
 	'sstmt : IDENTIFIER EQUAL exp'
@@ -50,6 +50,10 @@ def p_sstmt_peak(p):
 def p_sstmt_save(p):
 	'sstmt : SAVE ident AS file'
 	p[0] = ("save",  p[2], p[4] )
+
+def p_sstmt_plot(p):
+	'sstmt : PLOT ident AS file'
+	p[0] = ("plot",  p[2], p[4] )
 
 def p_sstmt_exp(p):
 	'sstmt : exp '
@@ -100,6 +104,10 @@ def p_exp_complement_genome(p):
 	'exp : COMPLEMENT ident AS STRING'
 	p[0] = ("complement", p[2], p[4])
 
+def p_exp_sort(p):
+	'exp : SORT ident '
+	p[0] = ("sort", p[2])
+
 def p_exp_load(p):
 	'exp : LOAD file optfiletype'
 	p[0] = ("load", p[2], p[3])
@@ -138,9 +146,13 @@ def p_exp_merge(p):
 		| MERGEMAX'''
 	p[0] = (p[1])[5:].lower()
 
-def p_exp_CAST(p):
+def p_exp_cast(p):
 	'exp : CAST ident AS filetype optmods'
 	p[0] = ("cast", p[2], p[4], p[5] )
+
+def p_exp_hilbert(p):
+	'exp : HILBERT idents optmods'
+	p[0] = ("hilbert", p[2], p[3] )
 
 def p_exp_optmods(p):
 	'optmods : WHERE mods'
@@ -165,10 +177,17 @@ def p_exp_mod(p):
 		| START LPAREN function RPAREN
 		| END LPAREN function RPAREN
 		| STRAND LPAREN function RPAREN
+		| DIMENSION LPAREN function RPAREN
+		| GENOME LPAREN function RPAREN
 		| SCORE LPAREN function RPAREN'''
 	p[0] =  (p[1].lower(), p[3])
 
-def p_function(p):
+def p_function_exp(p):
+	'function : exp '
+	p[0] = ("function", 'EXPRESSION', p[1])
+
+
+def p_function_aggregate(p):
 	'''function : MIN
 			| MAX
 			| SUM
@@ -179,11 +198,11 @@ def p_function(p):
 			| ANTIMODE
 			| COLLAPSE  
 			| STDEV'''
-	p[0] = ("function", p[1])
+	p[0] = ("function", 'AGGREGATE', p[1])
 
 def p_function_bool(p):
 	'function : boolexps'
-	p[0] = ("function", 'BOOL', p[1])
+	p[0] = ("function", 'BOOLEAN', p[1])
 
 def p_boolexps(p):
 	'boolexps : boolexp conj boolexps'

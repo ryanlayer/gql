@@ -3,16 +3,20 @@ import ply.lex as lex
 reserved = (
 	'INTERSECT',
 	'JACCARD',
+	'HILBERT',
 	'SUBTRACT',
 	'MERGEMAX',
 	'MERGEFLAT',
 	'MERGEMIN',
 	'COMPLEMENT',
 	'FILTER',
+	'SORT',
 	'LOAD',
 	'CAST',
+	'DIMENSION',
 	'DISTANCE',
 	'PRINT',
+	'PLOT',
 	'SAVE',
 	'COUNT',
 	'PEAK',
@@ -38,6 +42,7 @@ reserved = (
 	'BED4',
 	'BED6',
 	'BED12',
+	'SORTED',
 )
 
 tokens = (

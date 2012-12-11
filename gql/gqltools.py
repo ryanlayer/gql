@@ -14,6 +14,7 @@ import numpy
 import random
 import urllib
 import json
+import scurgen
 
 tmp_files = []
 config = {}
@@ -619,6 +620,29 @@ def filter_bedx(_N_list, filter_opts):
 	return filter_bedx
 #}}}
 
+#{{{ def sort_bedz(bedx):
+def sort_bedx(bedx):
+	pybedtools.settings.KEEP_TEMPFILES=True
+
+	allowed_types = gqltypes.sortable_types
+
+	if not type(bedx) in allowed_types:
+		raise ToolsException('Type mismatch in SORT. ' +\
+					bedx.name + ' not supported.',\
+					'cast')
+
+	try:
+		new_type = gqltypes.source_type_map[bedx.name]
+		sorted_bed = pybedtools.BedTool(bedx.val).sort()
+		new_file = new_type(sorted_bed.fn, True)
+		add_tmp_file(new_file)
+		return new_file
+	except pybedtools.helpers.BEDToolsError as e:
+		raise ToolsException('Error in SORT. ' + e.msg,\
+					'sort')
+
+#}}}
+
 #{{{ def cast(bedx, new_type):
 def cast(bedx, new_type):
 
@@ -765,6 +789,19 @@ def mergemin_bedn(bednfile):
 	add_tmp_file(R)
 
 	return R
+#}}}
+
+#{{{ def plot_val(ident, filename):
+def plot_val(ident, filename):
+
+	allowed_types = gqltypes.plotable_types
+
+	if not ( type(ident) in allowed_types ):
+		raise ToolsException('Type mismatch in PLOT. ' +\
+				ident.name + ' not supported.',\
+				'plot_val')
+	
+	ident.plot(filename)
 #}}}
 
 #{{{ def print_val(ident, num):
@@ -945,6 +982,63 @@ def bufcount(filename):
 		buf = read_f(buf_size)
 
 	return lines
+#}}}
+
+#{{{ def hilbert_curve_matrix(_N_list, 
+def hilbert_curve_matrix(_N_list, \
+						 _N_labels, \
+						 mods):
+	pybedtools.settings.KEEP_TEMPFILES=True
+
+	allowed_types = gqltypes.hilbertable_types
+
+	(N_list, N_label) = make_mixed_list_with_labels(_N_list, \
+													_N_labels, \
+													allowed_types,\
+													'HILBERT')
+
+
+	chrom = 'genome'
+	genome = ''
+	dim = 0
+
+	if 'chrom' in mods:
+		chrom = mods['chrom']
+	
+	if 'genome' not in mods:
+		raise ToolsException('Error in HILBERT. No genome or genome file ' + \
+				'provided.',\
+				'hilbert_curve_matrix')
+	else:
+		if type(mods['genome']) is str:
+			genome = mods['genome']
+		else:
+			genome = mods['genome'].val
+
+	if 'dimension' not in mods:
+		raise ToolsException('Error in HILBERT. No dimension provided.',\
+				'hilbert_curve_matrix')
+	else:
+		dim = mods['dimension']
+
+	matrix_list = []
+	for N in N_list:
+		try:
+			hm = scurgen.hilbert.HilbertMatrix(N.val,\
+											   genome,\
+											   chrom,\
+											   int(dim))
+			hm.norm_by_total_intervals()
+			matrix_list.append(gqltypes.NUMMATRIX(hm.matrix,[]))
+
+		except Exception as e:
+			raise ToolsException('Error in HILBERT. ',\
+					'hilbert_curve_matrix')
+
+	if len(matrix_list) == 1:
+		return matrix_list[0]
+	else:
+		return gqltypes.LIST(matrix_list,N_label)
 #}}}
 
 #{{{ def make_mixed_list_with_labels(_N_list, \

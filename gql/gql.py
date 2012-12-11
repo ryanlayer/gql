@@ -60,7 +60,7 @@ def main():
 	gqltools.config = json.load(json_data)
 
 	gqllexer    = lex.lex(module=gqltokens)
-	#gqlparser   = yacc.yacc(module=gqlgrammar,write_tables=0,debug=0)
+	gqlparser   = yacc.yacc(module=gqlgrammar,write_tables=0,debug=0)
 	global_env = (None, {})
 
 	history_file = expanduser("~/.gql_history")
@@ -100,8 +100,17 @@ def main():
 		f = open(sys.argv[1], 'r')
 		data = f.read()
 		f.close()
-		gqlast = gqlparser.parse(data,lexer=gqllexer,tracking=True)
-		result = gqlinterp.interpret(gqlast)
+		try:
+			gqlast = gqlparser.parse(data,\
+									 lexer=gqllexer,\
+									 tracking=True)
+			if (gqlast != None):
+				result = gqlinterp.interpret_cmdline(gqlast, global_env)
+		except Exception as e:
+			print e
+
+		#gqlast = gqlparser.parse(data,lexer=gqllexer,tracking=True)
+		#result = gqlinterp.interpret(gqlast)
 		gqltools.clear_tmp_files()
 
 if __name__ == "__main__":
