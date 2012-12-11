@@ -222,7 +222,8 @@ def p_bool_compare(p):
 		| GREATERTHAN
 		| LESSTHANEQUAL
 		| GREATERTHANEQUAL
-		| NOTEQUAL'''
+		| NOTEQUAL
+		| CONTAINS'''
 	p[0] = p[1]
 
 def p_bool_conj(p):
