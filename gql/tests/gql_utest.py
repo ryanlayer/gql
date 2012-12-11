@@ -14,7 +14,7 @@ class testGQL(unittest.TestCase):
 
 	#{{{ def setUp(self):
 	def setUp(self):
-		json_data=open('../gql.conf')
+		json_data=open('../config/gql.conf')
 		gqltools.config = json.load(json_data)
 	#}}}
 
@@ -38,6 +38,15 @@ class testGQL(unittest.TestCase):
 		gqltools.clear_tmp_files()
 
 		self.assertEqual(os.path.isfile(R_file_name), False)
+	#}}}
+
+	##{{{ 
+	def test_hilbert_curve_matrix(self):
+		a = gqltools.load_file('mm9:c2c12:chipseq:polii_mt','auto')
+		r = gqltools.hilbert_curve_matrix([a],['a.bed'],'hg19','chr1',8)
+
+		gqltools.plot_val(r,"test.png")	
+
 	#}}}
 
 	##{{{ def test_load_file(self):

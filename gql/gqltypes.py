@@ -1,5 +1,7 @@
 import re
 import gqltools
+import numpy as np
+from matplotlib import pyplot as plt
 
 chr_re = r'chr.+$'
 string_re = r'.*$'
@@ -200,7 +202,7 @@ class BEDM(EnvElement):
 	def count(self):
 		count_m = []
 		for i in range (0, len( (self.labels)[0] ) ):
-			count_r = [ NUM(gqltools.file_len(x.val)) for x in self.val[i]]
+			count_r = [ gqltools.file_len(x.val) for x in self.val[i]]
 			count_m.append(count_r)
 		return NUMMATRIX(count_m, self.labels)
 
@@ -236,7 +238,7 @@ class NUM(EnvElement):
 	name = 'NUM'
 	def __init__(self,val):
 		# list of bedx 
-		self.val = val
+		self.val = np.float(val)
 	def __str__(self):
 		return str(self.val)
 	def print_val(self,num):
@@ -249,13 +251,17 @@ class NUMLIST(EnvElement):
 	name = 'NUMLIST'
 	def __init__(self,val,labels):
 		# list of bedx 
-		self.val = val
+		self.val = np.array(val)
 		self.labels = labels
 	def print_val(self,num):
 		print self
 	def __str__(self):
-		output = '\t'.join(self.labels) + '\n'
-		output = output + '\t'.join( [str(x) for x in self.val] ) + '\n'
+		tmp_val = self.val.tolist()
+
+		output = ''
+		if len(self.labels) > 0:
+			output = '\t'.join(self.labels) + '\n'
+		output = output + '\t'.join( [str(x) for x in tmp_val] ) + '\n'
 		return output
 #}}}
 
@@ -264,30 +270,67 @@ class NUMMATRIX(EnvElement):
 	name = 'NUMMATRIX'
 	def __init__(self,val,labels):
 		# list of bedx 
+		self.val = np.matrix(val)
+		self.labels = labels
+
+	def print_val(self,num):
+		print self
+
+	def __str__(self):
+		output = ''
+
+		tmp_val = self.val.tolist()
+
+		if len(self.labels) > 0:
+			output = '\t' + '\t'.join(self.labels[1]) + '\n'
+
+		for i in range (0, len(tmp_val)):
+			if len(self.labels) > 0:
+				output = output +  self.labels[0][i] + '\t' 
+			output = output +  \
+					'\t'.join( [str(x) for x in tmp_val[i] ] ) + '\n'
+		return output
+
+	def plot(self,filename):
+		p = plt.imshow(self.val, interpolation='nearest', cmap='Blues')
+		plt.colorbar(p)
+		plt.savefig(filename)
+		plt.close()
+#}}}
+
+#{{{  class LIST(EvnElement):
+class LIST(EnvElement):
+	name = 'LIST'
+	def __init__(self,val,labels):
+		# list of bedx 
 		self.val = val
 		self.labels = labels
 	def print_val(self,num):
 		print self
 	def __str__(self):
-		output = '\t' + '\t'.join(self.labels[1]) + '\n'
-		for i in range (0, len( (self.labels)[0] ) ):
-			output = output +  \
-					self.labels[0][i] + '\t' + \
-					'\t'.join( [str(x) for x in self.val[i] ] ) + '\n'
+		output = ''
+		if len(self.labels) > 0:
+			output = '\t'.join(self.labels) + '\n'
+		output = output + '\t'.join( [str(x) for x in self.val] ) + '\n'
 		return output
 #}}}
 
-bed_types = (BED3, BED4, BED6, BED12, BEDL)
-saveable_types = (BED3, BED4, BED6, BED12, BEDN)
-flat_bed_types = (BED3, BED4, BED6, BED12)
-source_types = (BED3, BED4, BED6, BED12, GENOME)
-printable_types = (BED3, BED4, BED6, BED12, BEDN, BEDM, BEDL, \
-				   NUM, NUMLIST, NUMMATRIX, GENOME)
-countable_types = (BED3, BED4, BED6, BED12, BEDN, BEDM, BEDL)
-complementable_types = (BED3, BED4, BED6, BED12)
+bed_types = [BED3, BED4, BED6, BED12, BEDL]
+saveable_types = [BED3, BED4, BED6, BED12, BEDN]
+flat_bed_types = [BED3, BED4, BED6, BED12]
+source_types = [BED3, BED4, BED6, BED12, GENOME]
+printable_types = [BED3, BED4, BED6, BED12, BEDN, BEDM, BEDL, \
+				   NUM, NUMLIST, NUMMATRIX, GENOME]
+countable_types = [BED3, BED4, BED6, BED12, BEDN, BEDM, BEDL]
+complementable_types = [BED3, BED4, BED6, BED12]
+hilbertable_types = [BED3, BED4, BED6, BED12]
+plotable_types = [NUMMATRIX]
+sortable_types = [BED3, BED4, BED6, BED12]
 
 source_type_map = {
+	'LIST'	: LIST,
 	'NUMMATRIX'	: NUMMATRIX,
+	'NUMLIST'	: NUMLIST,
 	'NUM'		: NUM,
 	'BED3'		: BED3, 
 	'BED4'		: BED4, 
