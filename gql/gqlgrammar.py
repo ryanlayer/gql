@@ -177,6 +177,8 @@ def p_exp_mod(p):
 		| START LPAREN function RPAREN
 		| END LPAREN function RPAREN
 		| STRAND LPAREN function RPAREN
+		| FRAME LPAREN function RPAREN
+		| ATTRIBUTE LPAREN function RPAREN
 		| DIMENSION LPAREN function RPAREN
 		| GENOME LPAREN function RPAREN
 		| SCORE LPAREN function RPAREN'''

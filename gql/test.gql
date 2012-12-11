@@ -1,12 +1,24 @@
-# test load
+# LOAD
 a = LOAD "data/tiny_a.bed";
 b = LOAD "data/tiny_b.bed";
 c = LOAD "data/tiny_c.bed";
 d = LOAD "data/tiny_d.bed";
+bed3 = LOAD "data/bed3.bed";
+gtf = LOAD "data/gtf.gtf";
+g = LOAD "data/human.hg18.genome" AS GENOME;
+
+# remote LEAD
 mt = LOAD "mm9:c2c12:chipseq:polii_mt";
 mb = LOAD "mm9:c2c12:chipseq:polii_mb";
 
-g = LOAD "data/human.hg18.genome" AS GENOME;
+#CAST
+#gtf_bed = CAST gtf AS BED6;
+#PEAK gtf_bed 10;
+#sould_fail = CAST gtf_bed AS BED12;
+
+# FILTER
+gtf_subset = FILTER gtf WHERE ATTRIBUTE(=~"BC");
+PEAK gtf_subset 10;
 
 # HILBERT
 #h_mt = HILBERT mt WHERE CHROM("chr1"),GENOME("hg19"),DIMENSION(128);
@@ -19,7 +31,6 @@ g = LOAD "data/human.hg18.genome" AS GENOME;
 #mb_sort = SORT mb;
 #r = mt_sort,mb_sort JACCARD mt_sort,mb_sort;
 #PRINT r;
-
 
 # INTERSECT 
 #a = LOAD "data/tiny_*.bed";
@@ -40,8 +51,8 @@ g = LOAD "data/human.hg18.genome" AS GENOME;
 # FILTER
 #e = FILTER a,b,c,d WHERE CHROM(=="chr1");
 #PEAK e 10;
-e = FILTER a,b,c,d WHERE NAME(=~"1");
-PEAK e 10;
+#e = FILTER a,b,c,d WHERE NAME(=~"1");
+#PEAK e 10;
 
 #e = MERGEMAX a,b,c,d WHERE SCORE(SUM);
 #COUNT e ;
