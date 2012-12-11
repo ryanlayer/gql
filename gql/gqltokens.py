@@ -42,7 +42,6 @@ reserved = (
 	'BED4',
 	'BED6',
 	'BED12',
-	'SORTED',
 )
 
 tokens = (
@@ -53,6 +52,7 @@ tokens = (
 		#'DIVIDE',		# /
 		'AND',			# &
 		'OR',			# |
+		'CONTAINS',	# =~
 		'EQUALEQUAL',	# ==
 		'LESSTHAN',		# <
 		'GREATERTHAN',	# >
@@ -80,6 +80,7 @@ def t_newline(t):
 
 t_COMMA = r','
 #t_DIVIDE = r'/'
+t_CONTAINS = r'=~'
 t_EQUALEQUAL = r'=='
 t_EQUAL = r'='
 t_SEMICOLON = r';'

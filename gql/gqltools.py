@@ -553,7 +553,7 @@ def complement_bedx(bedx, genome):
 	return result
 #}}}
 
-#{{{ def def filter_bedx(_N_list, _opts):
+#{{{ def filter_bedx(_N_list, _opts):
 def filter_bedx(_N_list, filter_opts):
 	pybedtools.settings.KEEP_TEMPFILES=True
 
@@ -598,21 +598,35 @@ def filter_bedx(_N_list, filter_opts):
 				if not opt in  bed_type.col:
 					raise ToolsException(\
 							'Invalid field for given filetype ' + \
-							'in FOREACH. ' + opt + ' and ' + bed_type.name,\
+							'in FILTER. ' + opt + ' and ' + bed_type.name,\
 							'filter_bedx')
 				opt_col = bed_type.col[opt]
 
 				for test in filter_opts[opt]:
-					if len(test)==2:
-						op=test[0]
-						val=test[1]
-						test=cols[opt_col]
-						if type(val) is str:
-							test='"'+str(test)+'"'
-						result = eval(str(test) + op + str(val))
-						bool_string = bool_string +	str(result)
-					else:
-						bool_string = bool_string + test[0]
+					try:
+						if len(test)==2:
+							op=test[0]
+							val=test[1]
+							test=cols[opt_col]
+
+							result = ''
+							if op == '=~':
+								val = val.replace('"', "")
+								result = str(val) in str(test)
+							else:
+								if type(val) is str:
+									test='"'+str(test)+'"'
+								result = eval(str(test) + op + str(val))
+
+							bool_string = bool_string +	str(result)
+						else:
+							bool_string = bool_string + test[0]
+					except Exception as e:
+						raise ToolsException(\
+								'Error processing ' + \
+								str(val) + str(op) + str(test) + \
+								' in FILTER. ' + line, \
+								'filter_bedx')
 				keep_line = keep_line &  eval(bool_string)
 			if keep_line:
 				filter_file.write(line)

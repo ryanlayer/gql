@@ -424,8 +424,9 @@ def eval_exp(exp, env):
 						bool_func = [op, '"' + val[1] + '"']
 					else:
 						raise InterpException(\
-								'Unsupported value type ' + val[0] + 'in boolean ' + \
-							'function in FILTER.','filter')
+								'Unsupported value type ' + val[0] + \
+								'in boolean ' + \
+								'function in FILTER.','filter')
 				elif element[0] == 'conj':
 					conj = element[1][0]
 					bool_func = [conj]
